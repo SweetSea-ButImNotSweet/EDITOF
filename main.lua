@@ -20,3 +20,9 @@ Zenitha.setFirstScene('main')
 --     -- Add more here
 -- }
 -- LANG.setDefault('en')
+
+-- Load font
+FONT.load{
+    main='assets/fonts/RHDisplayGalaxy-Medium.otf'
+}
+FONT.setDefaultFont('main')

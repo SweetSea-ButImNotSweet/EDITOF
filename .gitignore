@@ -1,0 +1,7 @@
+.vscode
+*.ini
+.DS_Store
+Thumbs.db
+Icon?
+.Trash
+.file
