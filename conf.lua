@@ -1,12 +1,18 @@
 function love.conf(t)
+    -- SHOULD CHANGE
+    local game_name='Something4Zen'
+    local game_ver ='0.0'
+    local game_id  ='Something4Zen'
+
     local SCREEN_W,SCREEN_H=1280,720
-    local SCREEN_minW,SCREEN_minH=640.360
+    local SCREEN_minW,SCREEN_minH=1280,720
     local portrait=false
     
+    -- SHOULD NOT CHANGE!
     local msaa=4
     local mobile=love._os=='Android' or love._os=='iOS'
 
-    t.identity='Your game'
+    t.identity=game_id
     t.externalStorage=true -- Use external storage on Android
     t.version="11.4"
 
@@ -39,7 +45,7 @@ function love.conf(t)
     }
 
     t.window={
-        title         ='TypingSpeedGame',
+        title         =game_name..' '..game_ver,
         icon          =nil,
 
         display       =1,           -- Monitor ID

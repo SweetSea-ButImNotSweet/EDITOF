@@ -1,6 +1,13 @@
 -- Import Zenitha
 require('Zenitha')
 STRING.install()
+-- Set app's resolution and call Zenitha to recalculate the ratio
+SCR.resize(1280,720)
+-- FPS
+Zenitha.setMaxFPS(30) -- Enough
+-- Hide FPS and version (not necessary)
+Zenitha.setShowFPS(false)
+Zenitha.setVersionText('')
 
 -- Default variable
 SCENE_PATH='assets/scene'
@@ -14,15 +21,21 @@ for _,f in next,love.filesystem.getDirectoryItems(SCENE_PATH) do
 end
 Zenitha.setFirstScene('main')
 
--- Add language file here
--- LANG.add{
---     en='assets/lang/en'
---     -- Add more here
--- }
--- LANG.setDefault('en')
-
 -- Load font
 FONT.load{
     main='assets/fonts/RHDisplayGalaxy-Medium.otf'
 }
 FONT.setDefaultFont('main')
+
+-- Load image
+IMG.init{
+    placeholder ='assets/image/placeholder.png',
+}
+
+Zenitha.setOnFnKeys{
+    function()
+        if WIDGET.getSelected() then
+            MSG.new('info',WIDGET.getSelected():getInfo())
+        end
+    end
+}
