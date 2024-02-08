@@ -2,7 +2,8 @@ local kb =love.keyboard
 local gc =love.graphics
 local min,max=math.min,math.max
 
-local baseWidgetIDlist={
+local newWidget=require('assets.quickWidgetGenerator')
+local key2WidgetName={
     ['1']='text',
     ['2']='image',
     ['3']='button',
@@ -17,36 +18,8 @@ local baseWidgetIDlist={
     ['@']='inputBox',
     ['#']='textBox',
     ['$']='listBox',
+    ['%']='blank',
 }
-
-local newWidget
-do
-    local baseWidgetDict={
-        text           ={type='text'           ,x=0,y=0,            text ='Example of textbox'        ,},
-        image          ={type='image'          ,x=0,y=0,w=500,h=100,image='placeholder'               ,keepAspectRatio=false},
-        button         ={type='button'         ,x=0,y=0,w=500,h=100,text ='Example of button'         ,cornerR=0},
-        button_fill    ={type='button_fill'    ,x=0,y=0,w=500,h=100,text ='Example of button_fill'    ,cornerR=0},
-        button_invis   ={type='button_invis'   ,x=0,y=0,w=500,h=100,text ='Example of button_invis'   ,cornerR=0},
-        checkBox       ={type='checkBox'       ,x=0,y=0,            text ='Example of checkBox'       ,disp=function() return 0 end,},
-        switch         ={type='switch'         ,x=0,y=0,            text ='Example of switch'         ,disp=function() return 0 end,},
-        slider         ={type='slider'         ,x=0,y=0,w=500,      text ='Example of slider'         ,disp=function() return 0 end,},
-        slider_fill    ={type='slider_fill'    ,x=0,y=0,w=500,      text ='Example of slider_fill'    ,disp=function() return 0 end,},
-        slider_progress={type='slider_progress',x=0,y=0,w=500,      text ='Example of slider_progress',disp=function() return 0 end,},
-        selector       ={type='selector'       ,x=0,y=0,w=500,      text ='Example of selector'       ,disp=function() return 0 end,list={0,1,2,3,4,5}},
-        inputBox       ={type='inputBox'       ,x=0,y=0,w=500,h=100,text ='Example of inputBox'       ,},
-        textBox        ={type='textBox'        ,x=0,y=0,w=500,h=100,                                   },
-        listBox        ={type='listBox'        ,x=0,y=0,w=500,h=100,                                   drawFunc=function() FONT.set(25) GC.safePrint('Example of listbox',5,0) end,},
-    }
-
-    newWidget=setmetatable({},{
-        __index=function(_,k)
-            local w=WIDGET.new(TABLE.copy(baseWidgetDict[k]))
-            if k=='listBox' then w:setList{1,2,3,4,5} end
-            return w
-        end,
-        __metatable=true
-    })
-end
 
 local introduction_text=[[
 To add a widget, press the number key that corresponds to the widget.
@@ -60,7 +33,7 @@ local keyLayout_text=[[
 2 - image                  7 - switch             @ - inputBox
 3 - button                 8 - slider             # - textBox
 4 - button_fill            9 - slider_fill        $ - listBox
-5 - button_invis           0 - slider_progress
+5 - button_invis           0 - slider_progress    % - [BLANK]
 ]]
 
 -- For animation
@@ -96,7 +69,7 @@ function scene.keyUp(key,isRep)
         key=STRING.shift(key)
     end
 
-    local selectedWidgetID=baseWidgetIDlist[key]
+    local selectedWidgetID=key2WidgetName[key]
     if selectedWidgetID then
         -- backArg={key,WIDGET.new(TABLE.copy(baseWidgetDict[selectedWidgetID]))}
         backArg={key,newWidget[selectedWidgetID]}
