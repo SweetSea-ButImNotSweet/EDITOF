@@ -4,10 +4,18 @@ STRING.install()
 -- Set app's resolution and call Zenitha to recalculate the ratio
 SCR.resize(1280,720)
 -- FPS
-Zenitha.setMaxFPS(30) -- Enough
+Zenitha.setMaxFPS(50) -- Enough
 -- Hide FPS and version (not necessary)
-Zenitha.setShowFPS(false)
-Zenitha.setVersionText('')
+-- Zenitha.setShowFPS(false)
+-- Zenitha.setVersionText('')
+-- Global Fn keys
+Zenitha.setOnGlobalKey('f11',function()
+    love.window.setFullscreen(not love.window.getFullscreen())
+    love.resize(love.graphics.getWidth(),love.graphics.getHeight())
+end)
+
+-- Other modules
+CHAR=require('assets.char')
 
 -- Default variable
 SCENE_PATH='assets/scene'
@@ -23,7 +31,8 @@ Zenitha.setFirstScene('main')
 
 -- Load font
 FONT.load{
-    main='assets/fonts/RHDisplayGalaxy-Medium.otf'
+    main='assets/fonts/RHDisplayGalaxy-Medium.otf',
+    symbols='assets/fonts/symbols.otf'
 }
 FONT.setDefaultFont('main')
 
