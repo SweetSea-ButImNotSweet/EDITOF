@@ -3,6 +3,7 @@ local gc =love.graphics
 local min,max=math.min,math.max
 
 local newWidget=require('assets.quickWidgetGenerator')
+
 local key2WidgetName={
     ['1']='text',
     ['2']='image',
@@ -95,6 +96,8 @@ function scene.update(dt)
 
     scene.widgetList[1].color={1,1,1,min(framePassed/0.25,1)}
     scene.widgetList[2].color={1,1,1,min(framePassed/0.25,1)}
+
+    BlackCover.update(dt)
 end
 
 -- Only drawing the black overlay

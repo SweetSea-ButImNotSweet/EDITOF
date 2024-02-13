@@ -1,26 +1,26 @@
--- Import Zenitha
-require('Zenitha')
+if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+   lldebugger=require('lldebugger')
+   lldebugger.start()
+end
+
+-- Import Zenitha and other modules
+           require('Zenitha')
+CHAR      =require('assets.char')
+BlackCover=require('assets.blackCover')
+
+
 STRING.install()
--- Set app's resolution and call Zenitha to recalculate the ratio
 SCR.resize(1280,720)
--- FPS
 Zenitha.setMaxFPS(50) -- Enough
--- Hide FPS and version (not necessary)
 -- Zenitha.setShowFPS(false)
 -- Zenitha.setVersionText('')
--- Global Fn keys
 Zenitha.setOnGlobalKey('f11',function()
     love.window.setFullscreen(not love.window.getFullscreen())
     love.resize(love.graphics.getWidth(),love.graphics.getHeight())
 end)
 
--- Other modules
-CHAR=require('assets.char')
-
--- Default variable
-SCENE_PATH='assets/scene'
-
 -- Add scene file and set default scene to main
+SCENE_PATH='assets/scene'
 for _,f in next,love.filesystem.getDirectoryItems(SCENE_PATH) do
     if FILE.isSafe(SCENE_PATH..'/'..f) then
         local sceneName=f:sub(1,-5)
@@ -48,3 +48,10 @@ Zenitha.setOnFnKeys{
         end
     end
 }
+
+--- For debugging
+function REQUEST_BREAK()
+    if lldebugger and love.keyboard.isDown('f12') then
+        lldebugger.requestBreak()
+    end
+end
