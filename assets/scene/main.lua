@@ -3,28 +3,23 @@ local gc_setLineWidth,gc_setColor=GC.setLineWidth,GC.setColor
 local gc_getWidth,gc_getHeight=GC.getWidth,GC.getHeight
 local gc_replaceTransform=GC.replaceTransform
 
+local mo,kb=love.mouse,love.keyboard
+
 local getDelta=love.timer.getDelta
 local floor,ceil,max,clamp=math.floor,math.ceil,math.max,MATH.clamp
 
 local nextWidgetID=1        -- For generated widgets in the future
-local widgetList={} -- Format: ID=Widget
+local widgetList={}         -- Format: ID=Widget
+local selectedWidget
+
 local undoList={}
 local redoList={}
 
-local selectedWidget
 local gridEnabled=true
 local girdOpacity=0.1
 local cellSize=10
 
 local scene={}
-
-local function returnWidgetUnderMouseCursor(x,y,returnID)
-    for id,w in pairs(widgetList) do
-        if w:isAbove(x,y) then
-            if returnID then return id else return w end
-        end
-    end
-end
 
 local function drawGirdAndSafeBorder()
     -- + ------- X
@@ -53,6 +48,16 @@ local function drawGirdAndSafeBorder()
     gc_rectangle('line',0,0,SCR.w0,SCR.h0)
 end
 
+local function returnWidgetUnderMouseCursor(x,y,returnID)
+    for id,w in pairs(widgetList) do
+        if w:isAbove and w:isAbove(x,y) then
+            if returnID then return id else return w end
+        end
+    end
+end
+
+local dumpWidget=require('assets.dumpWidget')
+
 local function getSnappedLocation(x,y)
     if not gridEnabled then return x,y end
 
@@ -61,6 +66,12 @@ local function getSnappedLocation(x,y)
     if y%cellSize>halfCellSize then y=ceil(y/cellSize)*cellSize else y=floor(y/cellSize)*cellSize end
 
     return x,y
+end
+
+local function addWidget()
+    widgetList[nextWidgetID]=selectedWidget
+    nextWidgetID=nextWidgetID+1
+    selectedWidget=nil
 end
 
 function scene.enter()
@@ -73,12 +84,23 @@ function scene.enter()
             inPoint=0.25,outPoint=0.25
         }
         selectedWidget=SCN.args[2]
-        table.insert(widgetList,nextWidgetID,selectedWidget)
+    end
+end
+
+function scene.mouseMove(x,y)
+    local x,y=getSnappedLocation(x,y)
+    if selectedWidget then
+        selectedWidget.x=x
+        selectedWidget.y=y
+        selectedWidget:reset()
     end
 end
 
 function scene.mouseDown(x,y,id)
-    if id==3 then
+    local x,y=getSnappedLocation(x,y)
+    if id==1 then       -- Add the widget into widgetList
+        addWidget()
+    elseif id==3 then
         TEXT:clear()
         TEXT:add{
             text=string.format("%s, %s",x,y),
@@ -95,7 +117,6 @@ function scene.wheelMoved(_,y)
 end
 
 function scene.keyDown(key,isRep)
-    REQUEST_BREAK()
     if selectedWidget then
         local diff=(gridEnabled and cellSize) or 1
         local dx,dy,dw,dh=0,0,0,0
@@ -136,11 +157,11 @@ function scene.keyDown(key,isRep)
     -- Undo, Redo, Clear, Clear all, Interactive, View widget's detail
     elseif not isRep then
         if key=='escape' then
-            if mo.isDown(1) then MouseDownX,MouseDownY=nil else TEXT:clear() end
-        -- TODO: remake undo and redo system
+            TEXT:clear()
         elseif key=='tab' then
             SCN.go('newWidget','none')
             BlackCover.playAnimation('fadeIn',0.5,0.7)
+        
         elseif key=='z' then
             return
             -- TODO: Make DUMP function
@@ -161,7 +182,7 @@ function scene.keyDown(key,isRep)
             end
             SCN.go('interactive')
         elseif key=='v' then
-            SCN.go('textReader','none',TABLE.dump(widgetList))
+            SCN.go('textViewer','none',dumpWidget(selectedWidget,'string'))
         end
     end
 end
@@ -183,7 +204,7 @@ end
 
 function scene.update(dt)
     for _,w in pairs(widgetList) do w:update(dt) end
-    if selectedWidget then selectedWidget.update() end
+    if selectedWidget then selectedWidget:update(dt) end
     BlackCover.update(dt)
 end
 

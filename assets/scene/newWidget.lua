@@ -72,7 +72,6 @@ function scene.keyUp(key,isRep)
 
     local selectedWidgetID=key2WidgetName[key]
     if selectedWidgetID then
-        -- backArg={key,WIDGET.new(TABLE.copy(baseWidgetDict[selectedWidgetID]))}
         backArg={key,newWidget[selectedWidgetID]}
         timeToQuit=true
     end
