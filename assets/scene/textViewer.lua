@@ -1,5 +1,15 @@
 local showingText
 local textBox=WIDGET.new{type='textBox',name='texts',x=30,y=45,w=1000,h=640,fontSize=20,fixContent=true}
+local copyButton
+copyButton=WIDGET.new{type='button',name='back',x=1140,y=540,w=170,h=80,fontSize=60,fontType='symbols',text=CHAR.icon.copy,
+    code=function()
+        love.system.setClipboardText(table.concat(showingText))
+
+        copyButton.color='lG'
+        copyButton.text=CHAR.icon.check_circ
+        copyButton:reset()
+        end
+    }
 local scene={}
 
 function scene.enter()
@@ -15,16 +25,20 @@ function scene.enter()
             local _
             _,showingText=FONT.get(20):getWrap(SCN.args[1],960)
         else
-            assert(type(showingText)=='table','textReader: SCN.args[1] must be string or table of text')
+            assert(type(SCN.args[1])=='table','textViewer: SCN.args[1] must be string or table of text')
             showingText=SCN.args[1]
         end
-    end
+    else showingText={'No text!'} end
 
     textBox.font=SCN.args[2] or 20
     textBox:setTexts(showingText)
     textBox:reset()
 
     BG.set(SCN.args[3])
+
+    copyButton.color='LL'
+    copyButton.text=CHAR.icon.copy
+    copyButton:reset()
 end
 
 function scene.wheelMoved(_,y)
@@ -48,6 +62,7 @@ end
 scene.widgetList={
     textBox,
     WIDGET.new{type='button',name='back',x=1140,y=640,w=170,h=80,fontSize=60,fontType='symbols',text=CHAR.icon.back,code=WIDGET.c_backScn('none')},
+    copyButton
 }
 
 return scene
