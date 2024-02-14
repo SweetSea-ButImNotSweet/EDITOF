@@ -62,8 +62,14 @@ local function getSnappedLocation(x,y)
     if not gridEnabled then return x,y end
 
     local halfCellSize=cellSize/2
-    if x%cellSize>halfCellSize then x=ceil(x/cellSize)*cellSize else x=floor(x/cellSize)*cellSize end
-    if y%cellSize>halfCellSize then y=ceil(y/cellSize)*cellSize else y=floor(y/cellSize)*cellSize end
+    if x%cellSize>halfCellSize
+        then x=ceil (x/cellSize)*cellSize
+        else x=floor(x/cellSize)*cellSize
+    end
+    if y%cellSize>halfCellSize
+        then y=ceil (y/cellSize)*cellSize
+        else y=floor(y/cellSize)*cellSize
+    end
 
     return x,y
 end
@@ -117,6 +123,7 @@ function scene.wheelMoved(_,y)
 end
 
 function scene.keyDown(key,isRep)
+    REQUEST_BREAK()
     if selectedWidget then
         local diff=(gridEnabled and cellSize) or 1
         local dx,dy,dw,dh=0,0,0,0
@@ -155,35 +162,32 @@ function scene.keyDown(key,isRep)
         }
 
     -- Undo, Redo, Clear, Clear all, Interactive, View widget's detail
-    elseif not isRep then
-        if key=='escape' then
-            TEXT:clear()
-        elseif kb.isDown('lctrl','rctrl') and key=='n' then
+    elseif kb.isDown('lctrl','rctrl') then
+        if key=='n' then
             SCN.go('newWidget','none')
             BlackCover.playAnimation('fadeIn',0.5,0.7)
-        
         elseif key=='z' then
             return
-            -- TODO: Make DUMP function
+            -- TODO
         elseif key=='y' then
             return
             -- TODO
-        elseif key=='delete' then
-            undoList=TABLE.copy(widgetList)
-            widgetList={}
-            selectedWidget=false
-        elseif key=='home' then
+        elseif key=='return' then
             SCN.go('_console')
-        elseif key=='i' then
-            SCN.scenes.interactive.widgetList={} --Empty the old widget list
-            local interactiveWidgetList=SCN.scenes.interactive.widgetList
-            for _,w in pairs(widgetList) do
-                table.insert(interactiveWidgetList,w[5])
-            end
-            SCN.go('interactive')
-        elseif key=='v' then
-            SCN.go('textViewer','none',dumpWidget(selectedWidget,'string'))
         end
+    elseif key=='escape' then TEXT:clear()
+    elseif key=='delete' then
+        widgetList={}
+        selectedWidget=false
+    elseif key=='i' then
+        SCN.scenes.interactive.widgetList={} --Empty the old widget list
+        local interactiveWidgetList=SCN.scenes.interactive.widgetList
+        for _,w in pairs(widgetList) do
+            table.insert(interactiveWidgetList,w)
+        end
+        SCN.go('interactive')
+    elseif key=='v' then
+        SCN.go('textViewer','none',dumpWidget(selectedWidget,'string'))
     end
 end
 
