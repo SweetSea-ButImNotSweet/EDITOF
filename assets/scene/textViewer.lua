@@ -1,7 +1,8 @@
 local showingText
 local textBox=WIDGET.new{type='textBox',name='texts',x=30,y=45,w=1000,h=640,fontSize=20,fixContent=true}
 local copyButton
-copyButton=WIDGET.new{type='button',name='back',x=1140,y=540,w=170,h=80,fontSize=60,fontType='symbols',text=CHAR.icon.copy,
+copyButton=WIDGET.new{
+    type='button',name='back',x=1140,y=540,w=170,h=80,fontSize=60,fontType='symbols',text=CHAR.icon.copy,
     code=function()
         love.system.setClipboardText(table.concat(showingText))
 
@@ -10,6 +11,21 @@ copyButton=WIDGET.new{type='button',name='back',x=1140,y=540,w=170,h=80,fontSize
         copyButton:reset()
         end
     }
+local fontButton
+fontButton=WIDGET.new{
+    type='button',name='back',x=1140,y=440,w=170,h=80,fontSize=40,fontType='main',text='FONT',
+    code=function()
+        if textBox.fontType=='main' then
+            textBox   .fontType='_mono'
+            fontButton.fontType='main'
+        else
+            textBox   .fontType='main'
+            fontButton.fontType='_mono'
+        end
+        textBox   :reset()
+        fontButton:reset()
+    end
+}
 local scene={}
 
 function scene.enter()
@@ -62,7 +78,8 @@ end
 scene.widgetList={
     textBox,
     WIDGET.new{type='button',name='back',x=1140,y=640,w=170,h=80,fontSize=60,fontType='symbols',text=CHAR.icon.back,code=WIDGET.c_backScn('none')},
-    copyButton
+    copyButton,
+    fontButton
 }
 
 return scene
