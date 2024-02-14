@@ -42,8 +42,6 @@ return setmetatable({},{
         w.x,w.y=SCR.w0/2,SCR.h0/2
 
         w:reset()
-        w:update(1234568789)
-
         return w
     end,
     __metatable=true

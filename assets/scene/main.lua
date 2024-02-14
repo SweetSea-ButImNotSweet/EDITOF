@@ -50,7 +50,7 @@ end
 
 local function returnWidgetUnderMouseCursor(x,y,returnID)
     for id,w in pairs(widgetList) do
-        if w:isAbove and w:isAbove(x,y) then
+        if w.isAbove and w:isAbove(x,y) then
             if returnID then return id else return w end
         end
     end
@@ -158,7 +158,7 @@ function scene.keyDown(key,isRep)
     elseif not isRep then
         if key=='escape' then
             TEXT:clear()
-        elseif key=='tab' then
+        elseif kb.isDown('lctrl','rctrl') and key=='n' then
             SCN.go('newWidget','none')
             BlackCover.playAnimation('fadeIn',0.5,0.7)
         
