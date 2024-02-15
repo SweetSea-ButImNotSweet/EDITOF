@@ -11,6 +11,7 @@ local floor,ceil,max,clamp=math.floor,math.ceil,math.max,MATH.clamp
 local nextWidgetID=1        -- For generated widgets in the future
 local widgetList={}         -- Format: ID=Widget
 local selectedWidget
+local hoveringWidget        -- hoveringWidget != selectedWidget
 
 local undoList={}
 local redoList={}
@@ -75,8 +76,10 @@ local function getSnappedLocation(x,y)
 end
 
 local function addWidget()
-    widgetList[nextWidgetID]=selectedWidget
-    nextWidgetID=nextWidgetID+1
+    if not TABLE.findAll(widgetList,selectedWidget) then
+        widgetList[nextWidgetID]=selectedWidget
+        nextWidgetID=nextWidgetID+1
+    end
     selectedWidget=nil
 end
 
@@ -95,17 +98,31 @@ end
 
 function scene.mouseMove(x,y)
     local x,y=getSnappedLocation(x,y)
-    if selectedWidget then
+
+    if mo.isDown(1) and selectedWidget then
         selectedWidget.x=x
         selectedWidget.y=y
         selectedWidget:reset()
+    else
+        for _,w in pairs(widgetList) do
+            if w:isAbove(x,y) then
+                if selectedWidget~=w then
+                    hoveringWidget=w
+                    return
+                else
+                    return
+                end
+            end
+        end
+        hoveringWidget=nil
     end
 end
 
 function scene.mouseDown(x,y,id)
     local x,y=getSnappedLocation(x,y)
     if id==1 then       -- Add the widget into widgetList
-        addWidget()
+        if selectedWidget and not selectedWidget:isAbove(x,y) then addWidget()
+        elseif hoveringWidget then selectedWidget=hoveringWidget; hoveringWidget=nil end
     elseif id==3 then
         TEXT:clear()
         TEXT:add{
@@ -175,7 +192,11 @@ function scene.keyDown(key,isRep)
         elseif key=='return' then
             SCN.go('_console')
         end
-    elseif key=='escape' then TEXT:clear()
+    elseif key=='return' and selectedWidget then addWidget()
+    elseif key=='escape' then
+        if   selectedWidget
+        then selectedWidget=nil
+        else TEXT:clear() end
     elseif key=='delete' then
         widgetList={}
         selectedWidget=false
@@ -201,6 +222,20 @@ function scene.draw()
 
     if selectedWidget then
         selectedWidget:draw()
+
+        gc_setColor(0,0,0,0.5)
+        love.graphics.circle('fill',selectedWidget._x,selectedWidget._y,40)
+        gc_setColor(1,1,1,1)
+        love.graphics.circle('fill',selectedWidget._x,selectedWidget._y,25)
+        gc_setColor(.1,1,.5,1)
+        love.graphics.circle('fill',selectedWidget._x,selectedWidget._y,10)
+    end
+
+    if hoveringWidget then
+        gc_setColor(1,1,1,1)
+        love.graphics.circle('fill',hoveringWidget._x,hoveringWidget._y,25)
+        gc_setColor(.1,.5,1,1)
+        love.graphics.circle('fill',hoveringWidget._x,hoveringWidget._y,10)
     end
 
     BlackCover.draw()
