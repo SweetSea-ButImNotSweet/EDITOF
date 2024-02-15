@@ -55,7 +55,7 @@ WIDGET.setDefaultOption{
 
 local baseWidgetDict={
     text           ={type='text'           ,x=0,y=0,            text ='My internal name is text'           ,},
-    image          ={type='image'          ,x=0,y=0,w=300,h=300,image='placeholder'                        ,keepAspectRatio=false,alignX='left'},
+    image          ={type='image'          ,x=0,y=0,w=300,h=300,image='placeholder'                        ,keepAspectRatio=false},
     button         ={type='button'         ,x=0,y=0,w=300,h=300,text ='My internal name is button'         ,cornerR=0},
     button_fill    ={type='button_fill'    ,x=0,y=0,w=300,h=300,text ='My internal name is button_fill'    ,cornerR=0},
     button_invis   ={type='button_invis'   ,x=0,y=0,w=300,h=300,text ='My internal name is button_invis'   ,cornerR=0},
@@ -78,7 +78,9 @@ return setmetatable({},{
         if     k=='listBox' then w:setList {1,2,3,4,5}
         elseif k=='textBox' then w:setTexts{'My internal name is textBox'}
         end
-
+        w.x,w.y=SCR.w0/2,SCR.h0/2
+        w:reset()
+        
         return w
     end,
     __metatable=true
