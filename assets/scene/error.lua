@@ -30,15 +30,17 @@ function scene.draw()
     GC.clear(BGcolor)
     GC.setColor(1,1,1)
     GC.draw(err.shot,100,326,nil,512/err.shot:getWidth(),288/err.shot:getHeight())
-    GC.setColor(COLOR['LL'])
+
+    GC.setColor(COLOR.LL)
     FONT.set(100)GC.print(":(",100,0,0,1.2)
     FONT.set(40)GC.printf(errorText,100,160,SCR.w0-100)
+
     FONT.set(20,'_mono')
     GC.print(sysAndScn,100,630)
+
     FONT.set(15,'_mono')
-    for i=1,#err.msg do
-        GC.printf(err.msg[i],626,326+20*(i==1 and 0 or i+2),650)
-    end
+    GC.printf(err.msg[1],626,326,650)
+    GC.printf(table.concat(err.msg,'\n',2),626,386,650)
 end
 
 scene.widgetList={
