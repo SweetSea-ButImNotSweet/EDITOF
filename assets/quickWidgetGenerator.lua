@@ -62,23 +62,28 @@ WIDGET.setDefaultOption{
     }
 }
 
-local baseWidgetDict={
-    text           ={type='text'           ,x=0,y=0,            text ='My internal name is text'           ,},
-    image          ={type='image'          ,x=0,y=0,w=300,h=300,image='placeholder'                        ,keepAspectRatio=false},
-    button         ={type='button'         ,x=0,y=0,w=300,h=300,text ='My internal name is button'         ,cornerR=0},
-    button_fill    ={type='button_fill'    ,x=0,y=0,w=300,h=300,text ='My internal name is button_fill'    ,cornerR=0},
-    button_invis   ={type='button_invis'   ,x=0,y=0,w=300,h=300,text ='My internal name is button_invis'   ,cornerR=0},
-    checkBox       ={type='checkBox'       ,x=0,y=0,            text ='My internal name is checkBox'       ,disp=function() return 0 end,},
-    switch         ={type='switch'         ,x=0,y=0,            text ='My internal name is switch'         ,disp=function() return 0 end,},
-    slider         ={type='slider'         ,x=0,y=0,w=300,      text ='My internal name is slider'         ,disp=function() return 0 end,},
-    slider_fill    ={type='slider_fill'    ,x=0,y=0,w=300,      text ='My internal name is slider_fill'    ,disp=function() return 0 end,},
-    slider_progress={type='slider_progress',x=0,y=0,w=300,      text ='My internal name is slider_progress',disp=function() return 0 end,},
-    selector       ={type='selector'       ,x=0,y=0,w=300,      text ='My internal name is selector'       ,disp=function() return 0 end,list={0,1,2,3,4,5}},
-    inputBox       ={type='inputBox'       ,x=0,y=0,w=300,h=300,text ='My internal name is inputBox'       ,},
-    textBox        ={type='textBox'        ,x=0,y=0,w=300,h=300,},
-    listBox        ={type='listBox'        ,x=0,y=0,w=300,h=300,                                            drawFunc=function() FONT.set(25) GC.safePrint('My internal name is listbox',5,0) end},
-    blank          ={type='blank'          ,x=0,y=0,w=300,h=300,},
-}
+local baseWidgetDict
+do
+    local checkBoxR,switchR=false,false
+    local sliderR,slider_fillR,slider_progressR,selectorR=0,0,0,0
+    baseWidgetDict={
+        text           ={type='text'           ,x=0,y=0,            text ='My internal name is text'           ,},
+        image          ={type='image'          ,x=0,y=0,w=300,h=300,image='placeholder'                        ,keepAspectRatio=false},
+        button         ={type='button'         ,x=0,y=0,w=300,h=300,text ='My internal name is button'         ,cornerR=0},
+        button_fill    ={type='button_fill'    ,x=0,y=0,w=300,h=300,text ='My internal name is button_fill'    ,cornerR=0},
+        button_invis   ={type='button_invis'   ,x=0,y=0,w=300,h=300,text ='My internal name is button_invis'   ,cornerR=0},
+        checkBox       ={type='checkBox'       ,x=0,y=0,            text ='My internal name is checkBox'       ,disp=function() return checkBoxR        end,code=function(v) checkBoxR       =not checkBoxR end,},
+        switch         ={type='switch'         ,x=0,y=0,            text ='My internal name is switch'         ,disp=function() return switchR          end,code=function(v) switchR         =not switchR   end,},
+        slider         ={type='slider'         ,x=0,y=0,w=300,      text ='My internal name is slider'         ,disp=function() return sliderR          end,code=function(v) sliderR         =v end,},
+        slider_fill    ={type='slider_fill'    ,x=0,y=0,w=300,      text ='My internal name is slider_fill'    ,disp=function() return slider_fillR     end,code=function(v) slider_fillR    =v end,},
+        slider_progress={type='slider_progress',x=0,y=0,w=300,      text ='My internal name is slider_progress',disp=function() return slider_progressR end,code=function(v) slider_progressR=v end,},
+        selector       ={type='selector'       ,x=0,y=0,w=300,      text ='My internal name is selector'       ,disp=function() return selectorR        end,code=function(v) selectorR       =v end,list={0,1,2,3,4,5}},
+        inputBox       ={type='inputBox'       ,x=0,y=0,w=300,h=300,text ='My internal name is inputBox'       ,},
+        textBox        ={type='textBox'        ,x=0,y=0,w=300,h=300,},
+        listBox        ={type='listBox'        ,x=0,y=0,w=300,h=300,                                            drawFunc=function() FONT.set(25) GC.safePrint('My internal name is listbox',5,0) end},
+        blank          ={type='blank'          ,x=0,y=0,w=300,h=300,},
+    }
+end
 
 return setmetatable({},{
     __index=function(_,k)
