@@ -3,15 +3,17 @@ local gc_setLineWidth,gc_setColor=GC.setLineWidth,GC.setColor
 local gc_getWidth,gc_getHeight=GC.getWidth,GC.getHeight
 local gc_replaceTransform=GC.replaceTransform
 
+local dumpWidget=require('assets.dumpWidget')
+
 local mo,kb=love.mouse,love.keyboard
 local floor,ceil,max=math.floor,math.ceil,math.max
+local table_insert,table_remove,table_clear=table.insert,table.remove,TABLE.clear
 
-local nextWidgetID=1        -- For generated widgets in the future
-local widgetList={}         -- Format: ID=Widget
-local selectedWidget
+local widgetList={}         -- All widgets will be drawn, updated,...
+local selectedWidget        -- in order from the beginning to the end of the list
 local hoveringWidget        -- hoveringWidget != selectedWidget
 
-local undoList={}
+local undoList={}           -- Format: undoList={{},{w1},{w1,w2},{w1,w2,w3},...}
 local redoList={}
 
 local gridEnabled=true
@@ -47,16 +49,6 @@ local function drawGirdAndSafeBorder()
     gc_rectangle('line',0,0,SCR.w0,SCR.h0)
 end
 
-local function returnWidgetUnderMouseCursor(x,y,returnID)
-    for id,w in pairs(widgetList) do
-        if w.isAbove and w:isAbove(x,y) then
-            if returnID then return id else return w end
-        end
-    end
-end
-
-local dumpWidget=require('assets.dumpWidget')
-
 local function getSnappedLocation(x,y)
     if not gridEnabled then return x,y end
 
@@ -73,11 +65,31 @@ local function getSnappedLocation(x,y)
     return x,y
 end
 
-local function addWidget()
-    if not TABLE.findAll(widgetList,selectedWidget) then
-        widgetList[nextWidgetID]=selectedWidget
-        nextWidgetID=nextWidgetID+1
+local function dumpAllWidgets()
+    local output={}
+    for _,w in pairs(widgetList) do
+        output[#output+1]=dumpWidget(w,'table')
     end
+    return output
+end
+
+local function addWidget(w)
+    local w=w or selectedWidget
+    if not TABLE.findAll(widgetList,w) then
+        undoList[#undoList+1]=dumpAllWidgets()
+        
+        local id=#widgetList+1
+        w._id=id
+        table_insert(widgetList,1,w)
+
+        table_clear(redoList)
+    end
+end
+
+local function clearAllWidgets()
+    hoveringWidget,selectedWidget=nil
+    TABLE.safeClearR(widgetList,'[Cc]olor',true,true)
+    collectgarbage()    -- Collecting all garbages that released from all widgets.
 end
 
 function scene.enter()
@@ -121,7 +133,6 @@ function scene.mouseDown(x,y,id)
 
     if id==1 then       -- Add the widget into widgetList
         if selectedWidget and not selectedWidget:isAbove(x,y) then
-            addWidget()
             selectedWidget=nil
         elseif hoveringWidget then
             selectedWidget=hoveringWidget
@@ -136,14 +147,18 @@ function scene.mouseDown(x,y,id)
     end
 end
 
-function scene.mouseUp(x,y)
+function scene.mouseUp()
+    if selectedWidget then
+        selectedWidget.x,selectedWidget.y=getSnappedLocation(selectedWidget.x,selectedWidget.y)
+        selectedWidget:reset()
+    end
 end
 
 function scene.wheelMoved(_,y)
     WHEELMOV(y,'=','-')
 end
 
-function scene.keyDown(key,isRep)
+function scene.keyDown(key)
     if selectedWidget then
         local diff=(gridEnabled and cellSize) or 1
         local dx,dy,dw,dh=0,0,0,0
@@ -166,34 +181,33 @@ function scene.keyDown(key,isRep)
         end
     end
 
-    if     (key=='=' or key=='kp+') then
-        cellSize=cellSize+1
+    -- Zoom the cell size of grid
+    if kb.isDown('=','-','kp+','kp-') then
+        if     (key=='=' or key=='kp+') then cellSize=cellSize+1
+        elseif (key=='-' or key=='kp-') then cellSize=max(2,cellSize-1) end
         TEXT:clear()
         TEXT:add{
             text='Cell size of gird: '..cellSize,
             x=SCR.w0/2,y=SCR.h0/2,
         }
-        return
-    elseif (key=='-' or key=='kp-') then
-        cellSize=max(2,cellSize-1)
-        TEXT:clear()
-        TEXT:add{
-            text='Cell size of gird: '..cellSize,
-            x=SCR.w0/2,y=SCR.h0/2,
-        }
-        return
-
-    -- Undo, Redo, Clear, Clear all, Interactive, View widget's detail
+    -- Undo, Redo | Look at the beginning of this file to know
+    --            | the structure of undoList and redoList
     elseif kb.isDown('lctrl','rctrl') then
         if     key=='z' then
+            -- TODO: redoList
+            clearAllWidgets()
+            local u=table_remove(undoList)
+            for i=#u,1,-1 do
+                addWidget(WIDGET.new(u[i]))        -- u[i]={type='sea',x=25,y=52,w=100,...}
+            end
             return
-            -- TODO
         elseif key=='y' then
-            return
             -- TODO
-        elseif key=='return' then
-            SCN.go('_console')
-        end
+            return
+        elseif key=='delete' then
+            clearAllWidgets()
+        elseif key=='return' then SCN.go('_console') end
+    -- Clear, Clear all, Interactive, View widget's detail
     elseif key=='escape' then
         if   selectedWidget
         then selectedWidget=nil
@@ -201,20 +215,20 @@ function scene.keyDown(key,isRep)
     elseif key=='`' then
         SCN.go('newWidget','none')
         BlackCover.playAnimation('fadeIn',0.5,0.7)
-    elseif key=='delete' then
-        widgetList={}
-        selectedWidget=false
+    elseif key=='delete' and selectedWidget then
+        table_remove(widgetList,#widgetList-selectedWidget._id+1)
+        selectedWidget=nil
     elseif key=='i' then
         SCN.scenes.interactive.widgetList={} --Empty the old widget list
         local interactiveWidgetList=SCN.scenes.interactive.widgetList
         for _,w in pairs(widgetList) do
-            table.insert(interactiveWidgetList,w)
+            table_insert(interactiveWidgetList,w)
         end
         SCN.go('interactive')
     elseif key=='v' then
-        REQUEST_BREAK()
         SCN.go('textViewer','none',dumpWidget(selectedWidget,'string'))
-        -- SCN.go('textViewer','none',TABLE.dump(widgetList))
+    elseif key=='b' then
+        SCN.go('textViewer','none',TABLE.dump(undoList))
     end
 end
 
@@ -222,13 +236,11 @@ function scene.draw()
     drawGirdAndSafeBorder()
 
     gc_setColor(1,1,1,1)
-    -- Drawing widgets
-    for _,w in pairs(widgetList) do w:draw() end
-    -- Drawing the upcoming widget while dragging
+    -- Draw all widgets
+    for i=#widgetList,1,-1 do widgetList[i]:draw() end
 
+    -- Draw the center circle
     if selectedWidget then
-        selectedWidget:draw()
-
         gc_setColor(0,0,0,0.5)
         gc_circle('fill',selectedWidget._x,selectedWidget._y,40)
         gc_setColor(1,1,1,1)
@@ -236,7 +248,6 @@ function scene.draw()
         gc_setColor(.1,1,.5,1)
         gc_circle('fill',selectedWidget._x,selectedWidget._y,10)
     end
-
     if hoveringWidget then
         gc_setColor(1,1,1,1)
         gc_circle('fill',hoveringWidget._x,hoveringWidget._y,25)
