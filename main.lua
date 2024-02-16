@@ -5,7 +5,7 @@ end
 
 -- Import Zenitha and other modules
            require('Zenitha')
-           require('assets.color_extra')
+           require('ZenithaExtended')
 CHAR      =require('assets.char')
 BlackCover=require('assets.blackCover')
 
@@ -13,8 +13,6 @@ BlackCover=require('assets.blackCover')
 STRING.install()
 SCR.resize(1280,720)
 Zenitha.setMaxFPS(50) -- Enough
--- Zenitha.setShowFPS(false)
--- Zenitha.setVersionText('')
 Zenitha.setOnGlobalKey('f11',function()
     love.window.setFullscreen(not love.window.getFullscreen())
     love.resize(love.graphics.getWidth(),love.graphics.getHeight())
@@ -50,9 +48,10 @@ Zenitha.setOnFnKeys{
     end
 }
 
---- For debugging
+--- Activate debugging when hit F12 key
 function REQUEST_BREAK()
     if lldebugger and love.keyboard.isDown('f12') then
         lldebugger.requestBreak()
     end
 end
+REQUEST_BREAK_INSTANT=lldebugger and lldebugger.requestBreak or NULL
