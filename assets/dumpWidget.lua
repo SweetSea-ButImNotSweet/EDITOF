@@ -42,8 +42,8 @@ end
 
 
 ---@param w Zenitha.widget
----@param exportAs 'string'|'table'
----@return table
+---@param exportAs "'string'"|"'table'"
+---@return result table
 ---Get all arguments of the provided widgets when using WIDGET.new()
 return function (w,exportAs)
     exportAs=exportAs or 'string'
@@ -56,11 +56,12 @@ return function (w,exportAs)
     local originalW=WIDGET._prototype[w.type]
 
     if exportAs=='table' then
-        local l={}
+        local l={type=w.type}
         for _,v in pairs(originalW.buildArgs) do l[v]=w[v] end
         return l
     else
         local result='{\n'
+        result=string_format('%s%s,\n',result,dump('type',w.type,1))
         for _,k in pairs(originalW.buildArgs) do
             if w[k]~=originalW[k] then
                 result=string_format('%s%s,\n',result,dump(k,w[k],1))
