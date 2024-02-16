@@ -44,9 +44,14 @@ end
 ---@param dangerousKey string[]|string @ Which key is very dangerous to clear it recusively!
 ---@param regEx? false|boolean @ Enable using regEx to exclude keys (Only use this if the dangerousKey is a regEx string!)
 ---@param passR? false|boolean @ Passing dangerousKey when making recusive call?
----Clear table recusively (deep clean!)
+---Clear table recusively but with protection to not accidentally clear the value of other tables
 ---
----Use with **CAUTION**: it may clear the value of other tables if t contains references to them!
+---​-- Example:
+---tableA={6,2,6}
+---tableB={a=2,b=5,c=tableA}
+---TABLE.clearR(tableB,'c')
+---print(TABLE.dump(TABLE.a))    -- tableA={6,2,6}
+---print(TABLE.dump(TABLE.b))    -- tableB={}
 function TABLE.safeClearR(t,dangerousKey,regEx,passR)
     regEx=regEx or false
     passR=passR or false
