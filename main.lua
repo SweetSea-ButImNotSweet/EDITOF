@@ -5,6 +5,7 @@ end
 
 -- Import Zenitha and other modules
            require('Zenitha')
+           require('assets.color_extra')
 CHAR      =require('assets.char')
 BlackCover=require('assets.blackCover')
 
@@ -31,7 +32,7 @@ Zenitha.setFirstScene('main')
 
 -- Load font
 FONT.load{
-    main='assets/fonts/RHDisplayGalaxy-Medium.otf',
+    main   ='assets/fonts/RHDisplayGalaxy-Medium.otf',
     symbols='assets/fonts/symbols.otf'
 }
 FONT.setDefaultFont('main')

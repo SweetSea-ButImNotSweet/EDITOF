@@ -24,7 +24,7 @@ local key2WidgetName={
 
 local introduction_text=[[
 To add a widget, press the number key that corresponds to the widget.
-To return, hit ESC
+To return, hit ESC or ` (backtick)
 
 To choose a key that corresponds to !, @, #, $, and %,
 hold down the Shift key and press any number from 1 to 5.
@@ -58,12 +58,12 @@ function scene.leave()
 end
 
 function scene.keyDown(key)
-    if key=='escape' then
+    if key=='escape' or key=='`' then
         timeToQuit=true -- SCN.back()
     end
 end
 
-function scene.keyUp(key,isRep)
+function scene.keyUp(key)
     -- From 0 to 9, !, @, #, $, %
     if key:sub(1,2)=='kp' then key=key:sub(3) end
     if kb.isDown('lshift') or kb.isDown('rshift') then

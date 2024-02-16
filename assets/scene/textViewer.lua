@@ -4,7 +4,7 @@ local copyButton
 copyButton=WIDGET.new{
     type='button',name='back',x=1140,y=540,w=170,h=80,fontSize=60,fontType='symbols',text=CHAR.icon.copy,
     code=function()
-        love.system.setClipboardText(table.concat(showingText))
+        love.system.setClipboardText(table.concat(showingText,'\n'))
 
         copyButton.color='lG'
         copyButton.text=CHAR.icon.check_circ

@@ -25,6 +25,15 @@ WIDGET.setDefaultOption{
     image={
         reset=function(self)
             originalImageResetFunc(self)
+
+            if self.keepAspectRatio then    -- self.w or self.h will be missing!
+                if not self.h then
+                    self.h=self._scaleH*self._image:getWidth ()
+                else
+                    self.w=self._scaleW*self._image:getHeight()
+                end
+            end
+
             self._left=self._x-self.w*(
                 self.alignX=='left'   and 0   or
                 self.alignX=='center' and 0.5 or 1 -- right
