@@ -1,14 +1,19 @@
 local string_format=string.format
-local widgetPrototype=WIDGET._prototype
 
 local general_handling
 local function dump(key,val,tab)
     local tab_ident=''
     if not tab then tab=1 end
-    for _=1,tab do tab_ident=tab_ident..'\t' end
+    for _=1,tab do tab_ident=tab_ident..'\t' end  -- general_handling
 
     key=general_handling(key,tab_ident,tab)
-    val=general_handling(val,tab_ident,tab)
+    
+    if (key:lower()):find('color',1,true) then
+        val=string_format('COLOR.hex\'%s\'',COLOR.rgb2hex(unpack(val)))
+    else
+        val=general_handling(val,tab_ident,tab)
+    end
+
 
     return string_format('%s[%s]=%s',tab_ident,key,val)
 end
@@ -36,7 +41,6 @@ general_handling=function(s,tab_ident,tab)
 end
 
 
-
 ---@param w Zenitha.widget
 ---@param exportAs 'string'|'table'
 ---@return table
@@ -49,14 +53,18 @@ return function (w,exportAs)
         if exportAs=='table' then return {} else return '{\n}' end
     end
 
+    local originalW=WIDGET._prototype[w.type]
+
     if exportAs=='table' then
         local l={}
-        for _,v in pairs(widgetPrototype[w.type].buildArgs) do l[v]=w[v] end
+        for _,v in pairs(originalW.buildArgs) do l[v]=w[v] end
         return l
     else
         local result='{\n'
-        for _,k in pairs(widgetPrototype[w.type].buildArgs) do
-            result=string_format('%s%s,\n',result,dump(k,w[k],1))
+        for _,k in pairs(originalW.buildArgs) do
+            if w[k]~=originalW[k] then
+                result=string_format('%s%s,\n',result,dump(k,w[k],1))
+            end
         end
         result=result..'}'
         return result

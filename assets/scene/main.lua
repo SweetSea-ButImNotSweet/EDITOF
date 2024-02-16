@@ -4,9 +4,7 @@ local gc_getWidth,gc_getHeight=GC.getWidth,GC.getHeight
 local gc_replaceTransform=GC.replaceTransform
 
 local mo,kb=love.mouse,love.keyboard
-
-local getDelta=love.timer.getDelta
-local floor,ceil,max,clamp=math.floor,math.ceil,math.max,MATH.clamp
+local floor,ceil,max=math.floor,math.ceil,math.max
 
 local nextWidgetID=1        -- For generated widgets in the future
 local widgetList={}         -- Format: ID=Widget
@@ -80,7 +78,6 @@ local function addWidget()
         widgetList[nextWidgetID]=selectedWidget
         nextWidgetID=nextWidgetID+1
     end
-    selectedWidget=nil
 end
 
 function scene.enter()
@@ -93,15 +90,16 @@ function scene.enter()
             inPoint=0.25,outPoint=0.25
         }
         selectedWidget=SCN.args[2]
+        addWidget()
     end
 end
 
-function scene.mouseMove(x,y)
+function scene.mouseMove(x,y,dx,dy)
     local x,y=getSnappedLocation(x,y)
 
     if mo.isDown(1) and selectedWidget then
-        selectedWidget.x=x
-        selectedWidget.y=y
+        selectedWidget.x=selectedWidget.x+dx
+        selectedWidget.y=selectedWidget.y+dy
         selectedWidget:reset()
     else
         for _,w in pairs(widgetList) do
@@ -120,9 +118,15 @@ end
 
 function scene.mouseDown(x,y,id)
     local x,y=getSnappedLocation(x,y)
+
     if id==1 then       -- Add the widget into widgetList
-        if selectedWidget and not selectedWidget:isAbove(x,y) then addWidget()
-        elseif hoveringWidget then selectedWidget=hoveringWidget; hoveringWidget=nil end
+        if selectedWidget and not selectedWidget:isAbove(x,y) then
+            addWidget()
+            selectedWidget=nil
+        elseif hoveringWidget then
+            selectedWidget=hoveringWidget
+            hoveringWidget=nil
+        end
     elseif id==3 then
         TEXT:clear()
         TEXT:add{
@@ -140,7 +144,6 @@ function scene.wheelMoved(_,y)
 end
 
 function scene.keyDown(key,isRep)
-    REQUEST_BREAK()
     if selectedWidget then
         local diff=(gridEnabled and cellSize) or 1
         local dx,dy,dw,dh=0,0,0,0
@@ -148,8 +151,8 @@ function scene.keyDown(key,isRep)
         --     Moving widget                         Resizing widget
         if     key=='a' then dx=dx-diff       elseif key=='j' then dw=dw-diff
         elseif key=='d' then dx=dx+diff       elseif key=='l' then dw=dw+diff
-        elseif key=='w' then dy=dy-diff       elseif key=='i' then dh=dh-diff
-        elseif key=='s' then dy=dy+diff       elseif key=='k' then dh=dh+diff
+        elseif key=='w' then dy=dy-diff       elseif key=='i' then dh=dh+diff
+        elseif key=='s' then dy=dy+diff       elseif key=='k' then dh=dh-diff
         end
 
         if dx~=0 or dy~=0 or dw~=0 or dh~=0 then
@@ -170,6 +173,7 @@ function scene.keyDown(key,isRep)
             text='Cell size of gird: '..cellSize,
             x=SCR.w0/2,y=SCR.h0/2,
         }
+        return
     elseif (key=='-' or key=='kp-') then
         cellSize=max(2,cellSize-1)
         TEXT:clear()
@@ -177,13 +181,11 @@ function scene.keyDown(key,isRep)
             text='Cell size of gird: '..cellSize,
             x=SCR.w0/2,y=SCR.h0/2,
         }
+        return
 
     -- Undo, Redo, Clear, Clear all, Interactive, View widget's detail
     elseif kb.isDown('lctrl','rctrl') then
-        if key=='n' then
-            SCN.go('newWidget','none')
-            BlackCover.playAnimation('fadeIn',0.5,0.7)
-        elseif key=='z' then
+        if     key=='z' then
             return
             -- TODO
         elseif key=='y' then
@@ -192,11 +194,13 @@ function scene.keyDown(key,isRep)
         elseif key=='return' then
             SCN.go('_console')
         end
-    elseif key=='return' and selectedWidget then addWidget()
     elseif key=='escape' then
         if   selectedWidget
         then selectedWidget=nil
         else TEXT:clear() end
+    elseif key=='`' then
+        SCN.go('newWidget','none')
+        BlackCover.playAnimation('fadeIn',0.5,0.7)
     elseif key=='delete' then
         widgetList={}
         selectedWidget=false
@@ -208,7 +212,9 @@ function scene.keyDown(key,isRep)
         end
         SCN.go('interactive')
     elseif key=='v' then
+        REQUEST_BREAK()
         SCN.go('textViewer','none',dumpWidget(selectedWidget,'string'))
+        -- SCN.go('textViewer','none',TABLE.dump(widgetList))
     end
 end
 
@@ -224,18 +230,18 @@ function scene.draw()
         selectedWidget:draw()
 
         gc_setColor(0,0,0,0.5)
-        love.graphics.circle('fill',selectedWidget._x,selectedWidget._y,40)
+        gc_circle('fill',selectedWidget._x,selectedWidget._y,40)
         gc_setColor(1,1,1,1)
-        love.graphics.circle('fill',selectedWidget._x,selectedWidget._y,25)
+        gc_circle('fill',selectedWidget._x,selectedWidget._y,25)
         gc_setColor(.1,1,.5,1)
-        love.graphics.circle('fill',selectedWidget._x,selectedWidget._y,10)
+        gc_circle('fill',selectedWidget._x,selectedWidget._y,10)
     end
 
     if hoveringWidget then
         gc_setColor(1,1,1,1)
-        love.graphics.circle('fill',hoveringWidget._x,hoveringWidget._y,25)
+        gc_circle('fill',hoveringWidget._x,hoveringWidget._y,25)
         gc_setColor(.1,.5,1,1)
-        love.graphics.circle('fill',hoveringWidget._x,hoveringWidget._y,10)
+        gc_circle('fill',hoveringWidget._x,hoveringWidget._y,10)
     end
 
     BlackCover.draw()
