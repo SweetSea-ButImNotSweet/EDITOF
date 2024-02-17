@@ -12,6 +12,7 @@ end
 ---@return output table
 ---Generate a simple hashmap (only simple: k - v with v is a string or number, not function or boolean!)
 function TABLE.generateHashmap(t)
+    error('TABLE.generateHashmap is not ready to use yet!')
     local output={}
     for _,k in pairs(t) do
         output[k]=true
@@ -40,40 +41,49 @@ function TABLE.clearR(t)
     end
 end
 
+local string_find=string.find
 ---@param t table @ The table need to clear
----@param dangerousKey string[]|string @ Which key is very dangerous to clear it recusively!
+---@param dangerousKeys string[]|string @ Which key is very dangerous to clear it recusively!
 ---@param regEx? false|boolean @ Enable using regEx to exclude keys (Only use this if the dangerousKey is a regEx string!)
 ---@param passR? false|boolean @ Passing dangerousKey when making recusive call?
 ---Clear table recusively but with protection to not accidentally clear the value of other tables
----
+---```lua
 ---​-- Example:
 ---tableA={6,2,6}
 ---tableB={a=2,b=5,c=tableA}
 ---TABLE.clearR(tableB,'c')
 ---print(TABLE.dump(TABLE.a))    -- tableA={6,2,6}
 ---print(TABLE.dump(TABLE.b))    -- tableB={}
-function TABLE.safeClearR(t,dangerousKey,regEx,passR)
+---```
+function TABLE.safeClearR(t,dangerousKeys,regEx,passR)
     regEx=regEx or false
     passR=passR or false
 
     assertf(type(t)=='table',"TABLE.safeClearR needs a table, but t's type is %s",type(t))
     assertf(type(regEx)=='boolean',"TABLE.safeClearR.regEx is a boolean, got %s",type(regEx))
-    assert(
-        (regEx and type(dangerousKey)=='string') or type(dangerousKey)=='table',
-        "TABLE.safeClearR.dangerousKey needs a string if regEx is true OR table of string!"
+    assertf(
+        type(dangerousKeys)=='string' or type(dangerousKeys)=='table',
+        "TABLE.safeClearR.dangerousKeys needs a string if regEx is true OR table of string! Got %s",
+        type(dangerousKeys)
     )
 
     for k in next,t do
-        if (
-            regEx and (not string.find(k,dangerousKey)) or
-            (not regEx and not TABLE.findAll(dangerousKey,k))
-        ) then
-            if type(t[k])=='table' then
-                if passR then
-                    TABLE.safeClearR(t[k],dangerousKey,regEx,true)
-                else
-                    TABLE.clearR(t[k])
-                end
+        local isOkToClearRecusively=true
+        if type(dangerousKeys)=='string' then
+            dangerousKeys={dangerousKeys}
+        end
+        for _,dK in pairs(dangerousKeys) do
+            if string_find(k,dK,1,not regEx) then
+                isOkToClearRecusively=false
+                break
+            end
+        end
+
+        if isOkToClearRecusively and type(t[k])=='table' then
+            if passR then
+                TABLE.safeClearR(t[k],dangerousKeys,regEx,true)
+            else
+                TABLE.clearR(t[k])
             end
         end
         t[k]=nil
