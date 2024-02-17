@@ -8,16 +8,16 @@ function TABLE.kvSwap(t)
     return output
 end
 
----@param t table k: number, v: string|number
----@return output table
----Generate a simple hashmap (only simple: k - v with v is a string or number, not function or boolean!)
-function TABLE.generateHashmap(t)
-    error('TABLE.generateHashmap is not ready to use yet!')
-    local output={}
-    for _,k in pairs(t) do
-        output[k]=true
-    end
-end
+-- ---@param t table k: number, v: string|number
+-- ---@return output table
+-- ---Generate a simple hashmap (only simple: k - v with v is a string or number, not function or boolean!)
+-- function TABLE.generateHashmap(t)
+--     error('TABLE.generateHashmap is not ready to use yet!')
+--     local output={}
+--     for _,k in pairs(t) do
+--         output[k]=true
+--     end
+-- end
 
 ---@param t table
 ---Clear table recusively (deep clean!)
