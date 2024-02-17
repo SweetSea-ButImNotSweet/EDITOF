@@ -31,7 +31,8 @@ Zenitha.setFirstScene('main')
 -- Load font
 FONT.load{
     main   ='assets/fonts/RHDisplayGalaxy-Medium.otf',
-    symbols='assets/fonts/symbols.otf'
+    mono   ='assets/fonts/VictorMono-Bold.otf',
+    symbols='assets/fonts/symbols.otf',
 }
 FONT.setDefaultFont('main')
 
