@@ -6,12 +6,17 @@ local gc_replaceTransform=GC.replaceTransform
 local dumpWidget=require('assets.dumpWidget')
 
 local mo,kb=love.mouse,love.keyboard
-local floor,ceil,max=math.floor,math.ceil,math.max
-local table_insert,table_remove,table_clear=table.insert,table.remove,TABLE.clear
+local table_clear,table_copy=TABLE.clear,TABLE.copy
+local table_insert,table_remove=table.insert,table.remove
+local floor,ceil,wrap,max=math.floor,math.ceil,MATH.wrap,math.max
 
 local widgetList={}         -- All widgets will be drawn, updated,...
-local selectedWidget        -- in order from the beginning to the end of the list
+                            -- in order from the beginning to the end of the list
+local selectedWidget
+local selectedWidgetID
 local hoveringWidget        -- hoveringWidget != selectedWidget
+local hoveringWidgetID
+local updatedBeforeMoving=false
 
 local undoList={}           -- Format: undoList={{},{w1},{w1,w2},{w1,w2,w3},...}
 local redoList={}
@@ -73,58 +78,49 @@ local function dumpAllWidgets()
     return output
 end
 
-local function addWidget(w)
+local function updateUndoList()
+    undoList[#undoList+1]=dumpAllWidgets()
+    table_clear(redoList)
+end
+
+local function addWidget(w,reason)
     local w=w or selectedWidget
     if not TABLE.findAll(widgetList,w) then
-        undoList[#undoList+1]=dumpAllWidgets()
-        
-        local id=#widgetList+1
-        w._id=id
-        table_insert(widgetList,1,w)
+        if reason~='undo' and reason~='redo' then
+            updateUndoList()
+        end
 
-        table_clear(redoList)
+        table_insert(widgetList,1,w)
     end
 end
 
 local function clearAllWidgets()
-    hoveringWidget,selectedWidget=nil
-    TABLE.safeClearR(widgetList,'[Cc]olor',true,true)
+    hoveringWidget,hoveringWidgetID,selectedWidget,selectedWidgetID=nil
+    TABLE.safeClearR(widgetList,{'[Cc]olor','axis'},true,true)
     collectgarbage()    -- Collecting all garbages that released from all widgets.
+end
+
+local function switchSelectedWidget(d)
+    selectedWidgetID=wrap(
+        selectedWidgetID and (selectedWidgetID+(d=='next' and -1 or d=='prev' and 1 or 0) or 0) or
+        (d=='next' and #widgetList or 1),
+        1,#widgetList
+    )
+    selectedWidget=widgetList[selectedWidgetID]
 end
 
 function scene.enter()
     BlackCover.playAnimation('fadeOut',0.25)
     if SCN.prev=='newWidget' and SCN.args[1] then
         TEXT:add{
-            text=string.format("%s - %s",SCN.args[1],SCN.args[2].type),
+            text=string.format('%s - %s',SCN.args[1],SCN.args[2].type),
             x=SCR.w0/2,y=SCR.h0/2,
             duration=1,
             inPoint=0.25,outPoint=0.25
         }
         selectedWidget=SCN.args[2]
+        selectedWidgetID=1
         addWidget()
-    end
-end
-
-function scene.mouseMove(x,y,dx,dy)
-    local x,y=getSnappedLocation(x,y)
-
-    if mo.isDown(1) and selectedWidget then
-        selectedWidget.x=selectedWidget.x+dx
-        selectedWidget.y=selectedWidget.y+dy
-        selectedWidget:reset()
-    else
-        for _,w in pairs(widgetList) do
-            if w:isAbove(x,y) then
-                if selectedWidget~=w then
-                    hoveringWidget=w
-                    return
-                else
-                    return
-                end
-            end
-        end
-        hoveringWidget=nil
     end
 end
 
@@ -133,10 +129,11 @@ function scene.mouseDown(x,y,id)
 
     if id==1 then       -- Add the widget into widgetList
         if selectedWidget and not selectedWidget:isAbove(x,y) then
-            selectedWidget=nil
-        elseif hoveringWidget then
-            selectedWidget=hoveringWidget
-            hoveringWidget=nil
+            selectedWidget,selectedWidgetID=nil
+        end
+        if hoveringWidget then
+            selectedWidget,selectedWidgetID=hoveringWidget,hoveringWidgetID
+            hoveringWidget,hoveringWidgetID=nil
         end
     elseif id==3 then
         TEXT:clear()
@@ -147,11 +144,37 @@ function scene.mouseDown(x,y,id)
     end
 end
 
+function scene.mouseMove(x,y,dx,dy)
+    local x,y=getSnappedLocation(x,y)
+
+    if mo.isDown(1) and selectedWidget then
+        if not updatedBeforeMoving then
+            updateUndoList()
+            updatedBeforeMoving=true
+        end
+        selectedWidget.x=selectedWidget.x+dx
+        selectedWidget.y=selectedWidget.y+dy
+        selectedWidget:reset()
+    else
+        for id,w in pairs(widgetList) do
+            if w:isAbove(x,y) then
+                if selectedWidgetID~=id then
+                    hoveringWidget  =w
+                    hoveringWidgetID=id
+                end
+                return
+            end
+        end
+        hoveringWidget,hoveringWidgetID=nil
+    end
+end
+
 function scene.mouseUp()
     if selectedWidget then
         selectedWidget.x,selectedWidget.y=getSnappedLocation(selectedWidget.x,selectedWidget.y)
         selectedWidget:reset()
     end
+    updatedBeforeMoving=false
 end
 
 function scene.wheelMoved(_,y)
@@ -161,16 +184,20 @@ end
 function scene.keyDown(key)
     if selectedWidget then
         local diff=(gridEnabled and cellSize) or 1
-        local dx,dy,dw,dh=0,0,0,0
+        local dx,dy,dw,dh,df=0,0,0,0,0
 
         --     Moving widget                         Resizing widget
         if     key=='a' then dx=dx-diff       elseif key=='j' then dw=dw-diff
         elseif key=='d' then dx=dx+diff       elseif key=='l' then dw=dw+diff
         elseif key=='w' then dy=dy-diff       elseif key=='i' then dh=dh+diff
         elseif key=='s' then dy=dy+diff       elseif key=='k' then dh=dh-diff
+
+        --     Font size
+        elseif key=='u' then df=df-diff
+        elseif key=='o' then df=df+diff
         end
 
-        if dx~=0 or dy~=0 or dw~=0 or dh~=0 then
+        if dx~=0 or dy~=0 or dw~=0 or dh~=0 or df~=0 then
             if selectedWidget.x then selectedWidget.x=selectedWidget.x+dx end
             if selectedWidget.y then selectedWidget.y=selectedWidget.y+dy end
             if selectedWidget.w then selectedWidget.w=selectedWidget.w+dw end
@@ -181,8 +208,11 @@ function scene.keyDown(key)
         end
     end
 
+    -- Switch selected widgets
+    if     key=='q' then switchSelectedWidget('prev')
+    elseif key=='e' then switchSelectedWidget('next')
     -- Zoom the cell size of grid
-    if kb.isDown('=','-','kp+','kp-') then
+    elseif kb.isDown('=','-','kp+','kp-') then
         if     (key=='=' or key=='kp+') then cellSize=cellSize+1
         elseif (key=='-' or key=='kp-') then cellSize=max(2,cellSize-1) end
         TEXT:clear()
@@ -192,17 +222,27 @@ function scene.keyDown(key)
         }
     -- Undo, Redo | Look at the beginning of this file to know
     --            | the structure of undoList and redoList
+    -- uL[i]=rL[i]={type='sea',x=25,y=52,w=100,...}
     elseif kb.isDown('lctrl','rctrl') then
         if     key=='z' then
-            -- TODO: redoList
+            local uL=table_remove(undoList)
+            if not uL then return end
+
+            redoList[#redoList+1]=dumpAllWidgets()
             clearAllWidgets()
-            local u=table_remove(undoList)
-            for i=#u,1,-1 do
-                addWidget(WIDGET.new(u[i]))        -- u[i]={type='sea',x=25,y=52,w=100,...}
+            for i=#uL,1,-1 do
+                addWidget(WIDGET.new(table_copy(uL[i])),'undo')
             end
             return
         elseif key=='y' then
-            -- TODO
+            local rL=table_remove(redoList)
+            if not rL then return end
+
+            undoList[#undoList+1]=dumpAllWidgets()
+            clearAllWidgets()
+            for i=#rL,1,-1 do
+                addWidget(WIDGET.new(table_copy(rL[i])),'redo')
+            end
             return
         elseif key=='delete' then
             clearAllWidgets()
@@ -210,25 +250,29 @@ function scene.keyDown(key)
     -- Clear, Clear all, Interactive, View widget's detail
     elseif key=='escape' then
         if   selectedWidget
-        then selectedWidget=nil
+        then selectedWidget,selectedWidgetID=nil
         else TEXT:clear() end
     elseif key=='`' then
         SCN.go('newWidget','none')
         BlackCover.playAnimation('fadeIn',0.5,0.7)
     elseif key=='delete' and selectedWidget then
-        table_remove(widgetList,#widgetList-selectedWidget._id+1)
-        selectedWidget=nil
+        updateUndoList()
+        table_remove(widgetList,selectedWidgetID)
+        selectedWidget,selectedWidgetID=nil
     elseif key=='i' then
         SCN.scenes.interactive.widgetList={} --Empty the old widget list
         local interactiveWidgetList=SCN.scenes.interactive.widgetList
+        TABLE.clear(interactiveWidgetList)
         for _,w in pairs(widgetList) do
             table_insert(interactiveWidgetList,w)
         end
         SCN.go('interactive')
     elseif key=='v' then
         SCN.go('textViewer','none',dumpWidget(selectedWidget,'string'))
-    elseif key=='b' then
-        SCN.go('textViewer','none',TABLE.dump(undoList))
+    -- elseif key=='b' then
+    --     SCN.go('textViewer','none',TABLE.dump(undoList))
+    -- elseif key=='n' then
+    --     SCN.go('textViewer','none',TABLE.dump(redoList))
     end
 end
 
