@@ -7,15 +7,100 @@ local dumpWidget=require('assets.EDITOR.dumpWidget')
 
 local table_clear=TABLE.clear
 local table_insert=table.insert
-local floor,ceil,wrap=math.floor,math.ceil,MATH.wrap
+local floor,ceil,wrap,max=math.floor,math.ceil,MATH.wrap,math.max
 
-EDITORfunc={}
+--- EDITOF is the EDITORfunc
+---
+--- I prefer using EDITOF than EDITORfunc, but you can use it if you want
+EDITOF={}
+EDITORfunc=EDITOF
 
-function EDITORfunc.drawGirdAndSafeBorder()
-    -- + ------- X
-    -- | +++++++
-    -- | +++++++
-    -- Y +++++++
+------------------ < WIDGET > ------------------
+
+function EDITOF.dumpAllWidgets()
+    local output={}
+    for _,w in pairs(EDITOR.widgetList) do
+        output[#output+1]=dumpWidget(w,'table')
+    end
+    return output
+end
+
+function EDITOF.updateUndoList()
+    EDITOR.undoList[#EDITOR.undoList+1]=EDITOF.dumpAllWidgets()
+    table_clear(EDITOR.redoList)
+end
+
+function EDITOF.addWidget(w,reason)
+    local w=w or EDITOR.selectedWidget
+    if not TABLE.findAll(EDITOR.widgetList,w) then
+        if reason~='undo' and reason~='redo' then
+            EDITOF.updateUndoList()
+        end
+
+        table_insert(EDITOR.widgetList,1,w)
+    end
+end
+
+function EDITOF.clearAllWidgets()
+    EDITOR.hoveringWidget,EDITOR.hoveringWidgetID,EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
+    TABLE.safeClearR(EDITOR.widgetList,{'[Cc]olor','axis'},true,true)
+    collectgarbage()    -- Collecting all garbages that released from all widgets.
+end
+
+function EDITOF.switchSelectedWidget(d)
+    EDITOR.selectedWidgetID=wrap(
+        EDITOR.selectedWidgetID and (EDITOR.selectedWidgetID+(d=='next' and -1 or d=='prev' and 1 or 0) or 0) or
+        (d=='next' and #EDITOR.widgetList or 1),
+        1,#EDITOR.widgetList
+    )
+    EDITOR.selectedWidget=EDITOR.widgetList[EDITOR.selectedWidgetID]
+end
+
+------------------ </ WIDGET /> ------------------
+
+------------------ < ON KEY > ------------------
+
+--- Put this in ``scene.keyDown()``
+function EDITOF.selectedWidget_onKeyDown(key)
+    local diff=(EDITOR.gridEnabled and EDITOR.cellSize) or 1
+    local selectedWidget=EDITOR.selectedWidget
+    local dx,dy,dw,dh,df=0,0,0,0,0
+
+    --     Moving widget                         Resizing widget
+    if     key=='a' then dx=dx-diff       elseif key=='j' then dw=dw-diff
+    elseif key=='d' then dx=dx+diff       elseif key=='l' then dw=dw+diff
+    elseif key=='w' then dy=dy-diff       elseif key=='i' then dh=dh+diff
+    elseif key=='s' then dy=dy+diff       elseif key=='k' then dh=dh-diff
+
+    --     Font size
+    elseif key=='u' then df=df-diff
+    elseif key=='o' then df=df+diff
+    end
+
+    if dx~=0 or dy~=0 or dw~=0 or dh~=0 or df~=0 then
+        if selectedWidget.x then selectedWidget.x=selectedWidget.x+dx end
+        if selectedWidget.y then selectedWidget.y=selectedWidget.y+dy end
+        if selectedWidget.w then selectedWidget.w=selectedWidget.w+dw end
+        if selectedWidget.h then selectedWidget.h=selectedWidget.h+dh end
+        
+        if selectedWidget.fontSize then
+            selectedWidget.fontSize=max(selectedWidget.fontSize+df,1)
+        end
+
+        selectedWidget:reset()
+        return true
+    end
+end
+
+------------------ </ ON KEY /> ------------------
+
+------------------ < DRAW > ------------------
+
+function EDITOF.drawGirdAndSafeBorder()
+    -- +-------X
+    -- |+++++++
+    -- |+++++++
+    -- Y+++++++
 
     gc_replaceTransform(SCR.origin)
     local scr_origin_w,scr_origin_h=gc_getWidth(),gc_getHeight()
@@ -38,7 +123,12 @@ function EDITORfunc.drawGirdAndSafeBorder()
     gc_rectangle('line',0,0,SCR.w0,SCR.h0)
 end
 
-function EDITORfunc.getSnappedLocation(x,y)
+------------------ </ DRAW /> ------------------
+
+
+------------------ < OTHER > ------------------
+
+function EDITOF.getSnappedLocation(x,y)
     if not EDITOR.gridEnabled then return x,y end
 
     local halfCellSize=EDITOR.cellSize/2
@@ -52,43 +142,4 @@ function EDITORfunc.getSnappedLocation(x,y)
     end
 
     return x,y
-end
-
-function EDITORfunc.dumpAllWidgets()
-    local output={}
-    for _,w in pairs(EDITOR.widgetList) do
-        output[#output+1]=dumpWidget(w,'table')
-    end
-    return output
-end
-
-function EDITORfunc.updateUndoList()
-    EDITOR.undoList[#EDITOR.undoList+1]=EDITORfunc.dumpAllWidgets()
-    table_clear(EDITOR.redoList)
-end
-
-function EDITORfunc.addWidget(w,reason)
-    local w=w or EDITOR.selectedWidget
-    if not TABLE.findAll(EDITOR.widgetList,w) then
-        if reason~='undo' and reason~='redo' then
-            EDITORfunc.updateUndoList()
-        end
-
-        table_insert(EDITOR.widgetList,1,w)
-    end
-end
-
-function EDITORfunc.clearAllWidgets()
-    EDITOR.hoveringWidget,EDITOR.hoveringWidgetID,EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
-    TABLE.safeClearR(EDITOR.widgetList,{'[Cc]olor','axis'},true,true)
-    collectgarbage()    -- Collecting all garbages that released from all widgets.
-end
-
-function EDITORfunc.switchSelectedWidget(d)
-    EDITOR.selectedWidgetID=wrap(
-        EDITOR.selectedWidgetID and (EDITOR.selectedWidgetID+(d=='next' and -1 or d=='prev' and 1 or 0) or 0) or
-        (d=='next' and #EDITOR.widgetList or 1),
-        1,#EDITOR.widgetList
-    )
-    EDITOR.selectedWidget=EDITOR.widgetList[EDITOR.selectedWidgetID]
 end

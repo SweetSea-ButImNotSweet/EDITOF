@@ -3,9 +3,8 @@ local gc_circle,gc_setColor=GC.circle,GC.setColor
 local dumpWidget=require('assets.EDITOR.dumpWidget')
 
 local max=math.max
-local table_copy=TABLE.copy
 local mo,kb=love.mouse,love.keyboard
-local table_insert,table_remove=table.insert,table.remove
+local table_copy,table_remove=TABLE.copy,table.remove
 
 local scene={}
 
@@ -20,12 +19,12 @@ function scene.enter()
         }
         EDITOR.selectedWidget=SCN.args[2]
         EDITOR.selectedWidgetID=1
-        EDITORfunc.addWidget()
+        EDITOF.addWidget()
     end
 end
 
 function scene.mouseDown(x,y,id)
-    local x,y=EDITORfunc.getSnappedLocation(x,y)
+    local x,y=EDITOF.getSnappedLocation(x,y)
 
     if id==1 then       -- Add the widget into widgetList
         if EDITOR.selectedWidget and not EDITOR.selectedWidget:isAbove(x,y) then
@@ -45,16 +44,17 @@ function scene.mouseDown(x,y,id)
 end
 
 function scene.mouseMove(x,y,dx,dy)
-    local x,y=EDITORfunc.getSnappedLocation(x,y)
+    local x,y=EDITOF.getSnappedLocation(x,y)
 
     if mo.isDown(1) and EDITOR.selectedWidget then
+        local selectedWidget=EDITOR.selectedWidget
         if not EDITOR.updatedBeforeMoving then
-            EDITORfunc.updateUndoList()
+            EDITOF.updateUndoList()
             EDITOR.updatedBeforeMoving=true
         end
-        EDITOR.selectedWidget.x=EDITOR.selectedWidget.x+dx
-        EDITOR.selectedWidget.y=EDITOR.selectedWidget.y+dy
-        EDITOR.selectedWidget:reset()
+        selectedWidget.x=selectedWidget.x+dx
+        selectedWidget.y=selectedWidget.y+dy
+        selectedWidget:reset()
     else
         for id,w in pairs(EDITOR.widgetList) do
             if w:isAbove(x,y) then
@@ -71,7 +71,7 @@ end
 
 function scene.mouseUp()
     if EDITOR.selectedWidget then
-        EDITOR.selectedWidget.x,EDITOR.selectedWidget.y=EDITORfunc.getSnappedLocation(EDITOR.selectedWidget.x,EDITOR.selectedWidget.y)
+        EDITOR.selectedWidget.x,EDITOR.selectedWidget.y=EDITOF.getSnappedLocation(EDITOR.selectedWidget.x,EDITOR.selectedWidget.y)
         EDITOR.selectedWidget:reset()
     end
     EDITOR.updatedBeforeMoving=false
@@ -83,34 +83,12 @@ end
 
 function scene.keyDown(key)
     if EDITOR.selectedWidget then
-        local diff=(EDITOR.gridEnabled and EDITOR.cellSize) or 1
-        local dx,dy,dw,dh,df=0,0,0,0,0
-
-        --     Moving widget                         Resizing widget
-        if     key=='a' then dx=dx-diff       elseif key=='j' then dw=dw-diff
-        elseif key=='d' then dx=dx+diff       elseif key=='l' then dw=dw+diff
-        elseif key=='w' then dy=dy-diff       elseif key=='i' then dh=dh+diff
-        elseif key=='s' then dy=dy+diff       elseif key=='k' then dh=dh-diff
-
-        --     Font size
-        elseif key=='u' then df=df-diff
-        elseif key=='o' then df=df+diff
-        end
-
-        if dx~=0 or dy~=0 or dw~=0 or dh~=0 or df~=0 then
-            if EDITOR.selectedWidget.x then EDITOR.selectedWidget.x=EDITOR.selectedWidget.x+dx end
-            if EDITOR.selectedWidget.y then EDITOR.selectedWidget.y=EDITOR.selectedWidget.y+dy end
-            if EDITOR.selectedWidget.w then EDITOR.selectedWidget.w=EDITOR.selectedWidget.w+dw end
-            if EDITOR.selectedWidget.h then EDITOR.selectedWidget.h=EDITOR.selectedWidget.h+dh end
-
-            EDITOR.selectedWidget:reset()
-            return true
-        end
+        if EDITOF.selectedWidget_onKeyDown(key) then return end
     end
 
     -- Switch selected widgets
-    if     key=='q' then EDITORfunc.switchSelectedWidget('prev')
-    elseif key=='e' then EDITORfunc.switchSelectedWidget('next')
+    if     key=='q' then EDITOF.switchSelectedWidget('prev')
+    elseif key=='e' then EDITOF.switchSelectedWidget('next')
     -- Zoom the cell size of grid
     elseif kb.isDown('=','-','kp+','kp-') then
         if     (key=='=' or key=='kp+') then EDITOR.cellSize=EDITOR.cellSize+1
@@ -128,24 +106,24 @@ function scene.keyDown(key)
             local uL=table_remove(EDITOR.undoList)
             if not uL then return end
 
-            EDITOR.redoList[#EDITOR.redoList+1]=EDITORfunc.dumpAllWidgets()
-            EDITORfunc.clearAllWidgets()
+            EDITOR.redoList[#EDITOR.redoList+1]=EDITOF.dumpAllWidgets()
+            EDITOF.clearAllWidgets()
             for i=#uL,1,-1 do
-                EDITORfunc.addWidget(WIDGET.new(table_copy(uL[i])),'undo')
+                EDITOF.addWidget(WIDGET.new(table_copy(uL[i])),'undo')
             end
             return
         elseif key=='y' then
             local rL=table_remove(EDITOR.redoList)
             if not rL then return end
 
-            EDITOR.undoList[#EDITOR.undoList+1]=EDITORfunc.dumpAllWidgets()
-            EDITORfunc.clearAllWidgets()
+            EDITOR.undoList[#EDITOR.undoList+1]=EDITOF.dumpAllWidgets()
+            EDITOF.clearAllWidgets()
             for i=#rL,1,-1 do
-                EDITORfunc.addWidget(WIDGET.new(table_copy(rL[i])),'redo')
+                EDITOF.addWidget(WIDGET.new(table_copy(rL[i])),'redo')
             end
             return
         elseif key=='delete' then
-            EDITORfunc.clearAllWidgets()
+            EDITOF.clearAllWidgets()
         elseif key=='return' then SCN.go('_console') end
     -- Clear, Clear all, Interactive, View widget's detail
     elseif key=='escape' then
@@ -156,16 +134,13 @@ function scene.keyDown(key)
         SCN.go('newWidget','none')
         BlackCover.playAnimation('fadeIn',0.5,0.7)
     elseif key=='delete' and EDITOR.selectedWidget then
-        EDITORfunc.updateUndoList()
+        EDITOF.updateUndoList()
         table_remove(EDITOR.widgetList,EDITOR.selectedWidgetID)
         EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
     elseif key=='i' then
         SCN.scenes.interactive.widgetList={} --Empty the old widget list
-        local interactiveWidgetList=SCN.scenes.interactive.widgetList
-        TABLE.clear(interactiveWidgetList)
-        for _,w in pairs(EDITOR.widgetList) do
-            table_insert(interactiveWidgetList,w)
-        end
+        SCN.scenes.interactive.widgetList=table_copy(EDITOR.widgetList,0)
+        collectgarbage()
         SCN.go('interactive')
     elseif key=='v' then
         SCN.go('textViewer','none',dumpWidget(EDITOR.selectedWidget,'string'))
@@ -177,7 +152,7 @@ function scene.keyDown(key)
 end
 
 function scene.draw()
-    EDITORfunc.drawGirdAndSafeBorder()
+    EDITOF.drawGirdAndSafeBorder()
 
     gc_setColor(1,1,1,1)
     -- Draw all widgets
