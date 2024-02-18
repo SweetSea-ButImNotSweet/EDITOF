@@ -4,8 +4,11 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 end
 
 -- Import Zenitha and other modules
-           require('Zenitha')
-           require('ZenithaExtended')
+require('Zenitha')
+require('ZenithaExtended')
+require('assets.EDITOR.editorFunc')
+require('assets.EDITOR.editorTable')
+
 CHAR      =require('assets.char')
 BlackCover=require('assets.blackCover')
 

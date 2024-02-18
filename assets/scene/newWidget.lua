@@ -1,8 +1,6 @@
-local kb =love.keyboard
-local gc =love.graphics
-local min,max=math.min,math.max
-
-local newWidget=require('assets.quickWidgetGenerator')
+local kb=love.keyboard
+local min=math.min
+local newWidget=require('assets.EDITOR.widgetGen')
 
 local key2WidgetName={
     ['1']='text',
