@@ -73,8 +73,8 @@ function EDITOF.selectedWidget_onKeyDown(key)
     elseif key=='s' then dy=dy+diff       elseif key=='k' then dh=dh-diff
 
     --     Font size
-    elseif key=='u' then df=df-diff
-    elseif key=='o' then df=df+diff
+    elseif key=='u' then df=df-1
+    elseif key=='o' then df=df+1
     end
 
     if dx~=0 or dy~=0 or dw~=0 or dh~=0 or df~=0 then
