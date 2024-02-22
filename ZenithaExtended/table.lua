@@ -51,7 +51,7 @@ local string_find=string.find
 ---​-- Example:
 ---tableA={6,2,6}
 ---tableB={a=2,b=5,c=tableA}
----TABLE.clearR(tableB,'c')
+---TABLE.safeClearR(tableB,'c')
 ---print(TABLE.dump(TABLE.a))    -- tableA={6,2,6}
 ---print(TABLE.dump(TABLE.b))    -- tableB={}
 ---```
@@ -63,7 +63,7 @@ function TABLE.safeClearR(t,dangerousKeys,regEx,passR)
     assertf(type(regEx)=='boolean',"TABLE.safeClearR.regEx is a boolean, got %s",type(regEx))
     assertf(
         type(dangerousKeys)=='string' or type(dangerousKeys)=='table',
-        "TABLE.safeClearR.dangerousKeys needs a string if regEx is true OR table of string! Got %s",
+        "TABLE.safeClearR.dangerousKeys needs a table of string! Got %s",
         type(dangerousKeys)
     )
 
