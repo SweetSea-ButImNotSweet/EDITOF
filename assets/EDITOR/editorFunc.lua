@@ -5,8 +5,8 @@ local gc_replaceTransform=GC.replaceTransform
 
 local dumpWidget=require('assets.EDITOR.dumpWidget')
 
-local table_clear=TABLE.clear
-local table_insert=table.insert
+local table_copy,table_clear=TABLE.copy,TABLE.clear
+local table_insert,table_remove=table.insert,table.remove
 local floor,ceil,wrap,max=math.floor,math.ceil,MATH.wrap,math.max
 
 --- EDITOF is the EDITORfunc
@@ -17,31 +17,20 @@ EDITORfunc=EDITOF
 
 ------------------ < WIDGET > ------------------
 
-function EDITOF.dumpAllWidgets()
-    local output={}
-    for _,w in pairs(EDITOR.widgetList) do
-        output[#output+1]=dumpWidget(w,'table')
-    end
-    return output
-end
-
-function EDITOF.updateUndoList()
-    EDITOR.undoList[#EDITOR.undoList+1]=EDITOF.dumpAllWidgets()
-    table_clear(EDITOR.redoList)
-end
-
 function EDITOF.addWidget(w,reason)
     local w=w or EDITOR.selectedWidget
-    if not TABLE.findAll(EDITOR.widgetList,w) then
-        if reason~='undo' and reason~='redo' then
-            EDITOF.updateUndoList()
-        end
+    if reason~='undo' and reason~='redo' then EDITOF.updateUndoList() end
 
-        table_insert(EDITOR.widgetList,1,w)
-    end
+    table_insert(EDITOR.widgetList,1,w)
 end
 
-function EDITOF.clearAllWidgets()
+function EDITOF.removeSelectedWidget()
+    EDITOF.updateUndoList()
+    table_remove(EDITOR.widgetList,EDITOR.selectedWidgetID)
+    EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
+end
+
+function EDITOF.removeAllWidgets()
     EDITOR.hoveringWidget,EDITOR.hoveringWidgetID,EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
     TABLE.safeClearR(EDITOR.widgetList,{'[Cc]olor','axis'},true,true)
     collectgarbage()    -- Collecting all garbages that released from all widgets.
@@ -54,6 +43,19 @@ function EDITOF.switchSelectedWidget(d)
         1,#EDITOR.widgetList
     )
     EDITOR.selectedWidget=EDITOR.widgetList[EDITOR.selectedWidgetID]
+end
+
+function EDITOF.dumpAllWidgets()
+    local output={}
+    for _,w in pairs(EDITOR.widgetList) do
+        output[#output+1]=dumpWidget(w,'table')
+    end
+    return output
+end
+
+function EDITOF.updateUndoList()
+    EDITOR.undoList[#EDITOR.undoList+1]=EDITOF.dumpAllWidgets()
+    table_clear(EDITOR.redoList)
 end
 
 ------------------ </ WIDGET /> ------------------
@@ -94,6 +96,39 @@ end
 
 ------------------ </ ON KEY /> ------------------
 
+------------------ < UNDO AND REDO > ------------------
+
+-- Look at the editorTable.lua to know the structure
+-- of undoList and redoList table
+
+-- uL[i]=rL[i]={type='sea',x=25,y=52,w=100,...}
+
+function EDITOF.undo()
+    local uL=table_remove(EDITOR.undoList)
+    if not uL then return end
+
+    EDITOR.redoList[#EDITOR.redoList+1]=EDITOF.dumpAllWidgets()
+    EDITOF.removeAllWidgets()
+    for i=#uL,1,-1 do
+        EDITOF.addWidget(WIDGET.new(table_copy(uL[i])),'undo')
+    end
+    return
+end
+
+function EDITOF.redo()
+    local rL=table_remove(EDITOR.redoList)
+    if not rL then return end
+
+    EDITOR.undoList[#EDITOR.undoList+1]=EDITOF.dumpAllWidgets()
+    EDITOF.removeAllWidgets()
+    for i=#rL,1,-1 do
+        EDITOF.addWidget(WIDGET.new(table_copy(rL[i])),'redo')
+    end
+    return
+end
+
+------------------ </ UNDO AND REDO /> ------------------
+
 ------------------ < DRAW > ------------------
 
 function EDITOF.drawGirdAndSafeBorder()
@@ -130,15 +165,16 @@ end
 
 function EDITOF.getSnappedLocation(x,y)
     if not EDITOR.gridEnabled then return x,y end
+    local cellSize=EDITOR.cellSize
 
     local halfCellSize=EDITOR.cellSize/2
-    if x%EDITOR.cellSize>halfCellSize
-        then x=ceil (x/EDITOR.cellSize)*EDITOR.cellSize
-        else x=floor(x/EDITOR.cellSize)*EDITOR.cellSize
+    if x%cellSize>halfCellSize
+        then x=ceil (x/cellSize)*cellSize
+        else x=floor(x/cellSize)*cellSize
     end
-    if y%EDITOR.cellSize>halfCellSize
-        then y=ceil (y/EDITOR.cellSize)*EDITOR.cellSize
-        else y=floor(y/EDITOR.cellSize)*EDITOR.cellSize
+    if y%cellSize>halfCellSize
+        then y=ceil (y/cellSize)*cellSize
+        else y=floor(y/cellSize)*cellSize
     end
 
     return x,y

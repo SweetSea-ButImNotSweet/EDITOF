@@ -98,33 +98,12 @@ function scene.keyDown(key)
             text='Cell size of gird: '..EDITOR.cellSize,
             x=SCR.w0/2,y=SCR.h0/2,
         }
-    -- Undo, Redo | Look at the beginning of this file to know
-    --            | the structure of undoList and redoList
-    -- uL[i]=rL[i]={type='sea',x=25,y=52,w=100,...}
     elseif kb.isDown('lctrl','rctrl') then
-        if     key=='z' then
-            local uL=table_remove(EDITOR.undoList)
-            if not uL then return end
-
-            EDITOR.redoList[#EDITOR.redoList+1]=EDITOF.dumpAllWidgets()
-            EDITOF.clearAllWidgets()
-            for i=#uL,1,-1 do
-                EDITOF.addWidget(WIDGET.new(table_copy(uL[i])),'undo')
-            end
-            return
-        elseif key=='y' then
-            local rL=table_remove(EDITOR.redoList)
-            if not rL then return end
-
-            EDITOR.undoList[#EDITOR.undoList+1]=EDITOF.dumpAllWidgets()
-            EDITOF.clearAllWidgets()
-            for i=#rL,1,-1 do
-                EDITOF.addWidget(WIDGET.new(table_copy(rL[i])),'redo')
-            end
-            return
-        elseif key=='delete' then
-            EDITOF.clearAllWidgets()
+        if     key=='z' then EDITOF.undo()
+        elseif key=='y' then EDITOF.redo()
+        elseif key=='delete' then EDITOF.removeAllWidgets()
         elseif key=='return' then SCN.go('_console') end
+    elseif key=='delete' and EDITOR.selectedWidget then EDITOF.removeSelectedWidget()
     -- Clear, Clear all, Interactive, View widget's detail
     elseif key=='escape' then
         if   EDITOR.selectedWidget
@@ -133,10 +112,6 @@ function scene.keyDown(key)
     elseif key=='`' then
         SCN.go('newWidget','none')
         BlackCover.playAnimation('fadeIn',0.5,0.7)
-    elseif key=='delete' and EDITOR.selectedWidget then
-        EDITOF.updateUndoList()
-        table_remove(EDITOR.widgetList,EDITOR.selectedWidgetID)
-        EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
     elseif key=='i' then
         SCN.scenes.interactive.widgetList={} --Empty the old widget list
         SCN.scenes.interactive.widgetList=table_copy(EDITOR.widgetList,0)

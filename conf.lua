@@ -1,8 +1,8 @@
 function love.conf(t)
     -- SHOULD CHANGE
-    local game_name='Something4Zen'
+    local game_name='EDITOF'
     local game_ver ='0.0'
-    local game_id  ='Something4Zen'
+    local game_id  ='EDITOF'
 
     local SCREEN_W,SCREEN_H=1280,720
     local SCREEN_minW,SCREEN_minH=1280,720
