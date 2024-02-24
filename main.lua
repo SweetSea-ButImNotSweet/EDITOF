@@ -1,7 +1,7 @@
-if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
-   lldebugger=require('lldebugger')
-   lldebugger.start()
-end
+-- if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+--    lldebugger=require('lldebugger')
+--    lldebugger.start()
+-- end
 
 -- Import Zenitha and other modules
 require('Zenitha')
@@ -34,7 +34,10 @@ Zenitha.setFirstScene('main')
 -- Load font
 FONT.load{
     main   ='assets/fonts/RHDisplayGalaxy-Medium.otf',
-    mono   ='assets/fonts/VictorMono-Bold.otf',
+    mono   ='assets/fonts/VictorMono-Regular.ttf',
+    monoM  ='assets/fonts/VictorMono-Medium.ttf',
+    monoB  ='assets/fonts/VictorMono-Bold.otf',
+    monoBI ='assets/fonts/VictorMono-BoldItalic.ttf',
     symbols='assets/fonts/symbols.otf',
 }
 FONT.setDefaultFont('main')
@@ -42,6 +45,7 @@ FONT.setDefaultFont('main')
 -- Load image
 IMG.init{
     placeholder ='assets/image/placeholder.png',
+    error_placeholder='assets/image/error_placeholder.png',
 }
 
 Zenitha.setOnFnKeys{
