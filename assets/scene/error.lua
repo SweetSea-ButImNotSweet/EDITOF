@@ -10,24 +10,23 @@ function scene.enter()
     end
 
     err=Zenitha.getErr('#') or {
-        scene="NULL",
+        scene="C L G T ? !",
         msg={
-            "KHOAN! TAO ĐÃ LÀM GÌ SAI??? MÀ MÀY TỚI TÌM TAO VẬY???\nAPP VẪN CÒN CHẠY, VẪN SỐNG NHĂN RĂNG KÌA\nCHẲNG QUA MÀY CỐ MỞ MÀN HÌNH NÀY THÔI!",
+            "ỦA APP CÓ BUG NÀO ĐÂU? VẪN CHẠY BÌNH THƯỜNG MÀ NHỈ???\nLÀM QUÁI NÀO MÀN HÌNH NÀY LẠI XUẤT HIỆN KHI KHÔNG CÓ LỖI CƠ CHỨ?",
             "",
-            "Bộ mấy ông không tin tưởng được hay sao mà phải mò tới đây để hỏi tao là app có bug hay không?",
+            "À hiểu rồi, ông cố mở đúng không?",
+            "Ông có thể nhấn nút ESC để có thể thoát ra",
+            "(hoặc nhấn nút 'QUIT' trên màn hình cũng được)",
             "",
-            "Xin thưa, app nào trước giờ cũng chả có bug. App nào mà không gặp bug thì chỉ có app very đơn giản hoặc là ông dev đó ắt hẳn phải là thần thánh rồi.",
+            "Nếu app gặp bug thì cứ thoải mái tạo issue trên GitHub đi!",
+            "(mà làm ơn đừng tạo issue trùng với issue đã tạo rồi đấy!)",
             "",
-            "Còn bây giờ nếu app gặp bug thì cứ tạo issue trên GitHub đi!",
-            "(mà làm ơn đừng có tạo issue trùng với issue đã tạo rồi đấy!)",
-            "",
-            "Mày nhấn ESC được rồi đó",
-            "(hoặc nhấn nút 'QUIT' trên màn hình cũng được)"
+            "(Placeholder cho ảnh chụp màn hình được làm bởi 'CoColemon')"
         },
         shot=IMG.error_placeholder
     }
     BGcolor=Zenitha.getErr('#') and {.0,.0,.5} or {.1,.5,.9}
-    currentScn="scene:"..err.scene
+    currentScn="scene: "..err.scene
     errorText ="EDITOF has unexpectedly stopped working!\n#tấtcảlàtạiMagiaBaiser #tấtcảlàtạiUtenaHiigari"
 end
 
