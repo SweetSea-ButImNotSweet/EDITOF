@@ -11,6 +11,7 @@ require('assets.EDITOR.editorTable')
 
 CHAR      =require('assets.char')
 BlackCover=require('assets.blackCover')
+-- WIDGET    =require('ZenithaExtended.widget')
 
 
 STRING.install()
