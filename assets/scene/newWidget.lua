@@ -103,8 +103,8 @@ function scene.draw()
 end
 
 scene.widgetList={
-    {type='text',pos={0.5,0.5},y=-120,color={0,0,0,0},text=introduction_text},
-    {type='text',pos={0.5,0.5},y= 140,color={0,0,0,0},text=keyLayout_text,fontType='monoB',fontSize=25},
+    {type='text',pos={0.5,0.5},y=-120,color={1,1,1,0},text=introduction_text},
+    {type='text',pos={0.5,0.5},y= 140,color={1,1,1,0},text=keyLayout_text,fontType='monoB',fontSize=25},
 }
 
 return scene

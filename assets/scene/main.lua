@@ -1,10 +1,10 @@
-local gc_circle,gc_setColor=GC.circle,GC.setColor
-
 local dumpWidget=require('assets.EDITOR.dumpWidget')
 
+
+local gc_circle,gc_setColor=GC.circle,GC.setColor
 local max=math.max
+local table_copy=TABLE.copy
 local mo,kb=love.mouse,love.keyboard
-local table_copy,table_remove=TABLE.copy,table.remove
 
 local scene={}
 
@@ -98,17 +98,19 @@ function scene.keyDown(key)
             text='Cell size of gird: '..EDITOR.cellSize,
             x=SCR.w0/2,y=SCR.h0/2,
         }
+    -- Clear, Clear all, Undo, Redo
+    elseif key=='delete' and EDITOR.selectedWidget then EDITOF.removeSelectedWidget()
     elseif kb.isDown('lctrl','rctrl') then
-        if     key=='z' then EDITOF.undo()
-        elseif key=='y' then EDITOF.redo()
+        if     key=='z'      then EDITOF.undo()
+        elseif key=='y'      then EDITOF.redo()
         elseif key=='delete' then EDITOF.removeAllWidgets()
         elseif key=='return' then SCN.go('_console') end
-    elseif key=='delete' and EDITOR.selectedWidget then EDITOF.removeSelectedWidget()
-    -- Clear, Clear all, Interactive, View widget's detail
+    -- Unselect widget
     elseif key=='escape' then
         if   EDITOR.selectedWidget
         then EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
         else TEXT:clear() end
+    -- New widget, interactive mode and view widget's detail.
     elseif key=='`' then
         SCN.go('newWidget','none')
         BlackCover.playAnimation('fadeIn',0.5,0.7)
