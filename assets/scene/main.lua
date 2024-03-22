@@ -100,7 +100,7 @@ function scene.keyDown(key)
         }
     -- Clear, Clear all, Undo, Redo
     elseif key=='delete' and EDITOR.selectedWidget then EDITOF.removeSelectedWidget()
-    elseif kb.isDown('lctrl','rctrl') then
+    elseif kb.isCtrlDown() then
         if     key=='z'      then EDITOF.undo()
         elseif key=='y'      then EDITOF.redo()
         elseif key=='delete' then EDITOF.removeAllWidgets()

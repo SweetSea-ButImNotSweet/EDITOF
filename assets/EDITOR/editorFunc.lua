@@ -5,6 +5,7 @@ local gc_replaceTransform=GC.replaceTransform
 
 local dumpWidget=require('assets.EDITOR.dumpWidget')
 
+local kb=love.keyboard
 local table_copy,table_clear=TABLE.copy,TABLE.clear
 local table_insert,table_remove=table.insert,table.remove
 local floor,ceil,wrap,max=math.floor,math.ceil,MATH.wrap,math.max
@@ -53,6 +54,7 @@ function EDITOF.dumpAllWidgets()
     return output
 end
 
+--- # PLEASE USE THIS TO UPDATE UNDO LIST!
 function EDITOF.updateUndoList()
     EDITOR.undoList[#EDITOR.undoList+1]=EDITOF.dumpAllWidgets()
     table_clear(EDITOR.redoList)
@@ -65,18 +67,42 @@ end
 --- Put this in ``scene.keyDown()``
 function EDITOF.selectedWidget_onKeyDown(key)
     local diff=(EDITOR.gridEnabled and EDITOR.cellSize) or 1
+    if kb.isCtrlDown()  then diff=diff*10 end
+    if kb.isShiftDown() then diff=diff*10 end
+
     local selectedWidget=EDITOR.selectedWidget
     local dx,dy,dw,dh,df=0,0,0,0,0
 
     --     Moving widget                         Resizing widget
-    if     key=='a' then dx=dx-diff       elseif key=='j' then dw=dw-diff
-    elseif key=='d' then dx=dx+diff       elseif key=='l' then dw=dw+diff
-    elseif key=='w' then dy=dy-diff       elseif key=='i' then dh=dh+diff
-    elseif key=='s' then dy=dy+diff       elseif key=='k' then dh=dh-diff
+    if     key=='a' then dx=-diff       elseif key=='j' then dw=-diff
+    elseif key=='d' then dx= diff       elseif key=='l' then dw= diff
+    elseif key=='w' then dy=-diff       elseif key=='i' then dh= diff
+    elseif key=='s' then dy= diff       elseif key=='k' then dh=-diff
 
     --     Font size
-    elseif key=='u' then df=df-1
-    elseif key=='o' then df=df+1
+    elseif key=='u' then df=-1
+    elseif key=='o' then df= 1
+    end
+
+    -- Change alignment
+    if kb.isDown(';','p') then
+        if key==';' then
+            selectedWidget.alignX=TABLE.next(
+                {'left','center','right'},
+                selectedWidget.alignX
+            )
+            MSG.new('info','selectedWidget.alignX='..selectedWidget.alignX,0.5)
+        elseif key=='p' then
+            selectedWidget.alignY=TABLE.next(
+                {'top','center','bottom'},
+                selectedWidget.alignY
+            )
+            MSG.new('info','selectedWidget.alignY='..selectedWidget.alignY,0.5)
+        end
+
+        EDITOF.updateUndoList()
+        selectedWidget:reset()
+        return true
     end
 
     if dx~=0 or dy~=0 or dw~=0 or dh~=0 or df~=0 then
@@ -89,6 +115,7 @@ function EDITOF.selectedWidget_onKeyDown(key)
             selectedWidget.fontSize=max(selectedWidget.fontSize+df,1)
         end
 
+        EDITOF.updateUndoList()
         selectedWidget:reset()
         return true
     end

@@ -17,6 +17,23 @@ require('assets.EDITOR.editorTable')
 --
 CHAR      =require('assets.char')
 BlackCover=require('assets.blackCover')
+--
+---Check if Ctrl key is pressed
+---@return boolean
+function love.keyboard.isCtrlDown()
+    return love.keyboard.isDown('lctrl','rctrl')
+end
+---Check if Alt key is pressed
+---@return boolean
+function love.keyboard.isAltDown()
+    return love.keyboard.isDown('lalt','ralt')
+end
+---Check if Shift key is pressed
+---@return boolean
+function love.keyboard.isShiftDown()
+    return love.keyboard.isDown('lshift','rshift')
+end
+
 
 
 STRING.install()
