@@ -1,6 +1,11 @@
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
-   lldebugger=require('lldebugger')
-   lldebugger.start()
+    lldebugger=require('lldebugger')
+    lldebugger.start()
+    
+    -- Activate debugger when hit F12 key
+    REQUEST_BREAK=lldebugger.requestBreak
+else
+    REQUEST_BREAK=NULL
 end
 
 -- Import Zenitha and other modules
@@ -56,11 +61,3 @@ Zenitha.setOnFnKeys{
         end
     end
 }
-
---- Activate debugging when hit F12 key
-function REQUEST_BREAK()
-    if lldebugger and love.keyboard.isDown('f12') then
-        lldebugger.requestBreak()
-    end
-end
-REQUEST_BREAK_INSTANT=lldebugger and lldebugger.requestBreak or NULL
