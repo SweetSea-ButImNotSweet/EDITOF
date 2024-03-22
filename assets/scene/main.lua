@@ -121,10 +121,6 @@ function scene.keyDown(key)
         SCN.go('interactive')
     elseif key=='v' then
         SCN.go('textViewer','none',dumpWidget(EDITOR.selectedWidget,'string'))
-    -- elseif key=='b' then
-    --     SCN.go('textViewer','none',TABLE.dump(EDITOR.undoList))
-    -- elseif key=='n' then
-    --     SCN.go('textViewer','none',TABLE.dump(EDITOR.redoList))
     end
 end
 

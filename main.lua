@@ -1,8 +1,6 @@
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
     lldebugger=require('lldebugger')
     lldebugger.start()
-    
-    -- Activate debugger when hit F12 key
     REQUEST_BREAK=lldebugger.requestBreak
 else
     REQUEST_BREAK=NULL
