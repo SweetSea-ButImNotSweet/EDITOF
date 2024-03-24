@@ -26,13 +26,8 @@ WIDGET.setDefaultOption{
         reset=function(self)
             originalImageResetFunc(self)
 
-            if self.keepAspectRatio then    -- self.w or self.h will be missing!
-                if not self.h then
-                    self.h=self._scaleH*self._image:getWidth ()
-                else
-                    self.w=self._scaleW*self._image:getHeight()
-                end
-            end
+            self.h=self._scaleH*self._image:getHeight()
+            self.w=self._scaleW*self._image:getWidth ()
 
             self._left=self._x-self.w*(
                 self.alignX=='left'   and 0   or
@@ -68,7 +63,7 @@ do
     local sliderR,slider_fillR,slider_progressR,selectorR=0,0,0,0
     baseWidgetDict={
         text           ={type='text'           ,x=0,y=0,            text ='My internal name is text'           ,},
-        image          ={type='image'          ,x=0,y=0,w=300,h=300,image='placeholder'                        ,keepAspectRatio=false},
+        image          ={type='image'          ,x=0,y=0,w=300,h=300,image='placeholder'                        ,},
         button         ={type='button'         ,x=0,y=0,w=300,h=300,text ='My internal name is button'         ,cornerR=0},
         button_fill    ={type='button_fill'    ,x=0,y=0,w=300,h=300,text ='My internal name is button_fill'    ,cornerR=0},
         button_invis   ={type='button_invis'   ,x=0,y=0,w=300,h=300,text ='My internal name is button_invis'   ,cornerR=0},
