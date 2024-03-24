@@ -114,7 +114,7 @@ function scene.keyDown(key)
     elseif key=='`' then
         SCN.go('newWidget','none')
         BlackCover.playAnimation('fadeIn',0.5,0.7)
-    elseif key=='i' then
+    elseif key=='space' then
         SCN.scenes.interactive.widgetList={} --Empty the old widget list
         SCN.scenes.interactive.widgetList=table_copy(EDITOR.widgetList,0)
         collectgarbage()

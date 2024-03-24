@@ -11,7 +11,7 @@ gc.replaceTransform(SCR.xOy)
 This interactive mode is designed to allow you to interact with widgets XD
 
 There is no widgets on the screen right now, press Esc to go back
-and create some widgets, then press [I] on the keyboard to come back here.]]
+and create some widgets, then press [Space] on the keyboard to come back here.]]
         )
     introduction_text_X,introduction_text_Y=(SCR.w-introduction_text:getWidth())/2,(SCR.h-introduction_text:getHeight())/2
 
