@@ -82,50 +82,21 @@ function scene.wheelMoved(_,y)
 end
 
 function scene.keyDown(key)
-    if EDITOR.selectedWidget then
-        if EDITOF.selectedWidget_onKeyDown(key) then return end
+    if key=='v' then
+        SCN.go('textViewer','none',dumpWidget(EDITOR.selectedWidget,'string'))
+        return
     end
 
-    -- Switch selected widgets
-    if     key=='q' then EDITOF.switchSelectedWidget('prev')
-    elseif key=='e' then EDITOF.switchSelectedWidget('next')
-    -- Zoom the cell size of grid
-    elseif kb.isDown('=','-','kp+','kp-') then
-        if     (key=='=' or key=='kp+') then EDITOR.cellSize=EDITOR.cellSize+1
-        elseif (key=='-' or key=='kp-') then EDITOR.cellSize=max(2,EDITOR.cellSize-1) end
-        TEXT:clear()
-        TEXT:add{
-            text='Cell size of gird: '..EDITOR.cellSize,
-            x=SCR.w0/2,y=SCR.h0/2,
-        }
-    -- Clear, Clear all, Undo, Redo
-    elseif key=='delete' and EDITOR.selectedWidget then EDITOF.removeSelectedWidget()
-    elseif kb.isCtrlDown() then
-        if     key=='z'      then EDITOF.undo()
-        elseif key=='y'      then EDITOF.redo()
-        elseif key=='delete' then EDITOF.removeAllWidgets()
-        elseif key=='return' then SCN.go('_console') end
-    -- Unselect widget
-    elseif key=='escape' then
-        if   EDITOR.selectedWidget
-        then EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
-        else TEXT:clear() end
-    -- New widget, interactive mode and view widget's detail.
-    elseif key=='`' then
-        SCN.go('newWidget','none')
-        BlackCover.playAnimation('fadeIn',0.5,0.7)
-    elseif key=='space' then
-        SCN.scenes.interactive.widgetList={} --Empty the old widget list
-        SCN.scenes.interactive.widgetList=table_copy(EDITOR.widgetList,0)
-        collectgarbage()
-        SCN.go('interactive')
-    elseif key=='v' then
-        SCN.go('textViewer','none',dumpWidget(EDITOR.selectedWidget,'string'))
+    if false then
+        -- TODO: implementing from keybind to action
     end
 end
 
+local drawGird,drawSafeBorder=EDITOF.drawGird,EDITOF.drawSafeBorder
+local BlackCover_draw=BlackCover.draw
 function scene.draw()
-    EDITOF.drawGirdAndSafeBorder()
+    drawGird()
+    drawSafeBorder()
 
     gc_setColor(1,1,1,1)
     -- Draw all widgets
@@ -147,7 +118,7 @@ function scene.draw()
         gc_circle('fill',EDITOR.hoveringWidget._x,EDITOR.hoveringWidget._y,10)
     end
 
-    BlackCover.draw()
+    BlackCover_draw()
 end
 
 function scene.update(dt)

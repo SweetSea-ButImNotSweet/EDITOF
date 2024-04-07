@@ -1,3 +1,5 @@
+---@diagnostic disable: unbalanced-assignments, ambiguity-1
+
 local gc_setLineWidth,gc_setColor=GC.setLineWidth,GC.setColor
 local gc_getWidth,gc_getHeight=GC.getWidth,GC.getHeight
 local gc_line,gc_rectangle=GC.line,GC.rectangle
@@ -16,6 +18,32 @@ local floor,ceil,wrap,max=math.floor,math.ceil,MATH.wrap,math.max
 EDITOF={}
 EDITORfunc=EDITOF
 
+------------------ < EDITOR > ------------------
+
+function EDITOF.showNewWidgetDialog()
+    SCN.go('newWidget','none')
+    BlackCover.playAnimation('fadeIn',0.5,0.7)
+end
+
+function EDITOF.adjustZoomLevel(key)
+    if     (key=='=' or key=='kp+') then EDITOR.cellSize=EDITOR.cellSize+1
+    elseif (key=='-' or key=='kp-') then EDITOR.cellSize=max(2,EDITOR.cellSize-1) end
+    TEXT:clear()
+    TEXT:add{
+        text='Cell size of gird: '..EDITOR.cellSize,
+        x=SCR.w0/2,y=SCR.h0/2,
+    }
+end
+
+function EDITOF.goToInteractiveMode()
+    SCN.scenes.interactive.widgetList={}
+    SCN.scenes.interactive.widgetList=table_copy(EDITOR.widgetList,0)
+    collectgarbage()
+    SCN.go('interactive')
+end
+
+------------------ </EDITOR > ------------------
+
 ------------------ < WIDGET > ------------------
 
 function EDITOF.addWidget(w,reason)
@@ -26,6 +54,8 @@ function EDITOF.addWidget(w,reason)
 end
 
 function EDITOF.removeSelectedWidget()
+    if not EDITOR.selectedWidget then return end
+
     EDITOF.updateUndoList()
     table_remove(EDITOR.widgetList,EDITOR.selectedWidgetID)
     EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
@@ -44,6 +74,13 @@ function EDITOF.switchSelectedWidget(d)
         1,#EDITOR.widgetList
     )
     EDITOR.selectedWidget=EDITOR.widgetList[EDITOR.selectedWidgetID]
+end
+
+---Use this to unselect selected widget (escape key)
+function EDITOF.unselectWidget()
+    if   EDITOR.selectedWidget
+    then EDITOR.selectedWidget,EDITOR.selectedWidgetID=nil
+    else TEXT:clear() end
 end
 
 function EDITOF.dumpAllWidgets()
@@ -158,7 +195,8 @@ end
 
 ------------------ < DRAW > ------------------
 
-function EDITOF.drawGirdAndSafeBorder()
+--- Draw gird in the editor's area
+function EDITOF.drawGird()
     -- +-------X
     -- |+++++++
     -- |+++++++
@@ -177,14 +215,14 @@ function EDITOF.drawGirdAndSafeBorder()
     for iy=1,floor(scr_origin_h/EDITOR.cellSize) do
         gc_line(0,EDITOR.cellSize*iy,scr_origin_w,EDITOR.cellSize*iy)
     end
-
-    -- Draw safe border
+end
+--- Draw safe border
+function EDITOF.drawSafeBorder()
     gc_replaceTransform(SCR.xOy)
     gc_setLineWidth(20)
     gc_setColor(1,1,1,EDITOR.girdOpacity+0.1)
     gc_rectangle('line',0,0,SCR.w0,SCR.h0)
 end
-
 ------------------ </ DRAW /> ------------------
 
 
