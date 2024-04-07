@@ -1,52 +1,46 @@
 local string_format=string.format
 
-local step2
-local function step1(key,val,tab)
-    local tab_ident=''
-    if not tab then tab=1 end
-    for _=1,tab do tab_ident=tab_ident..'\t' end  -- general_handling
+local function KV_handling(key,value,tab,isKey)
+    local type_k=type(key)
+    local type_v=type(value)
+    local result_k,result_v
 
-    key=step2(key,tab_ident,tab,true)
-    
-    if (key:lower()):find('color',1,true) then
-        val=string_format('COLOR.hex\'%s\'',COLOR.rgb2hex(unpack(val)))
+    local indent_str=''
+    tab=tab or 1
+    for _=1,tab do indent_str=indent_str..'\t' end -- general_handling
+
+    if type_k=='string' and string.find(key,'[^A-Za-z0-9_]') then
+        result_k=string_format('[%q]',key)
     else
-        val=step2(val,tab_ident,tab)
+        result_k=key
     end
 
-
-    return string_format('%s%s=%s',tab_ident,key,val)
-end
-
-step2=function(s,tab_ident,tab,isKey)
-    local type_s=type(s)
-
-    if type_s=='boolean' then
-        return s and 'true' or 'false'
-    elseif type_s=='nil' then
-        return 'nil'
-    elseif type_s=='table' then
+    if type_v=='boolean' then
+        result_v=value and 'true' or 'false'
+    elseif type_v=='nil' then
+        result_v='nil'
+    elseif type_v=='table' then
         local temp='{\n'
-        for k,v in pairs(s) do
-            temp=temp..step1(k,v,tab+1)..',\n'
+        for k,v in pairs(value) do
+            local _k,_v=KV_handling(k,v,tab+1)
+            temp=temp.._k..'='.._v..',\n'
         end
-        return temp..tab_ident..'}'
-    elseif (        -- " --> \"
-        type_s=='string' and
-        string.find(s, '[^A-Za-z0-9_]')
-    ) then
-        return string_format(isKey and '[%q]' or '%q', s)
+        result_v=temp..indent_str..'}'
+    elseif type_v=='number' then
+        result_v=value
     else
-        return tostring(s)
+        result_v=tostring(value)
     end
+
+    return indent_str..result_k,result_v
 end
 
 
 ---@param w Zenitha.widget
 ---@param exportAs "'string'"|"'table'"
----@return result table
+---@return table|string
 ---Get all arguments of the provided widgets when using WIDGET.new()
-return function (w,exportAs)
+return function(w,exportAs)
     exportAs=exportAs or 'string'
     assert(exportAs=='string' or exportAs=='table',"dumpWidget().exportAs must be 'string' or 'table'")
 
@@ -62,10 +56,11 @@ return function (w,exportAs)
         return l
     else
         local result='{\n'
-        result=string_format('%s%s,\n',result,step1('type',w.type,1))
         for _,k in pairs(originalW.buildArgs) do
-            if w[k]~=originalW[k] then
-                result=string_format('%s%s,\n',result,step1(k,w[k],1))
+            if w[k]~=originalW[k] and not TABLE.find({'function','thread','userdata'},type(w[k]))
+            then
+                local _k,_v=KV_handling(k,w[k],1)
+                result=result.._k..'='.._v..',\n'
             end
         end
         result=result..'}'
